@@ -1,0 +1,13 @@
+# build products
+build/
+bin/
+# large experiment sweep (re-create with: make experiments)
+output/sweep/
+# LaTeX intermediates
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.synctex.gz
+CS375_Lab10_Submission.tar.gz
+__pycache__/

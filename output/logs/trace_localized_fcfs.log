@@ -1,0 +1,471 @@
+==============================================================
+ CS375 Lab 10 - Demand Paging + CPU Scheduling Simulator
+==============================================================
+ Trace        : input/trace_localized.txt  (316 accesses)
+ Address      : 16-bit virtual = 4 outer + 4 inner + 8 offset bits
+ Page size    : 256 bytes  (256 pages per process)
+ Frames       : 16  (advanced Clock, R + M bits)
+ TLB          : 8 entries, LRU, tagged by PID
+ Quantum      : 4  (MLFQ: 4/8/16, aging after 30 ticks)
+ Policies     : fcfs rr priority mlfq
+==============================================================
+Policy: FCFS
+--------------------------------------------------------------
+[t=    0] ARRIVE   P1.T1  burst=40 priority=2
+[t=    0] ARRIVE   P1.T2  burst=24 priority=3
+[t=    0] ARRIVE   P2.T1  burst=64 priority=1
+[t=    0] ARRIVE   P2.T2  burst=16 priority=1
+[t=    0] ARRIVE   P3.T1  burst=32 priority=3
+[t=    0] ARRIVE   P3.T2  burst=48 priority=3
+[t=    0] ARRIVE   P4.T1  burst=80 priority=2
+[t=    0] ARRIVE   P4.T2  burst=12 priority=1
+[t=    0] DISPATCH P1.T1  (runs to completion)
+[t=    0] P1.T1  R 0x12CF  page 18 (outer 1, inner 2) off 0xCF | TLB MISS | PAGE FAULT -> frame 0 (free frame) | PA 0x00CF
+[t=    1] P1.T1  R 0x12E1  page 18 (outer 1, inner 2) off 0xE1 | TLB HIT  | PA 0x00E1
+[t=    2] P1.T1  R 0x1075  page 16 (outer 1, inner 0) off 0x75 | TLB MISS | PAGE FAULT -> frame 1 (free frame) | PA 0x0175
+[t=    3] P1.T1  W 0x12F2  page 18 (outer 1, inner 2) off 0xF2 | TLB HIT  | PA 0x00F2
+[t=    4] P1.T1  R 0x118B  page 17 (outer 1, inner 1) off 0x8B | TLB MISS | PAGE FAULT -> frame 2 (free frame) | PA 0x028B
+[t=    5] P1.T1  R 0x12BC  page 18 (outer 1, inner 2) off 0xBC | TLB HIT  | PA 0x00BC
+[t=    6] P1.T1  R 0x1FF4  page 31 (outer 1, inner 15) off 0xF4 | TLB MISS | PAGE FAULT -> frame 3 (free frame) | PA 0x03F4
+[t=    7] P1.T1  R 0x10FC  page 16 (outer 1, inner 0) off 0xFC | TLB HIT  | PA 0x01FC
+[t=    8] P1.T1  W 0x1093  page 16 (outer 1, inner 0) off 0x93 | TLB HIT  | PA 0x0193
+[t=    9] P1.T1  R 0x12F8  page 18 (outer 1, inner 2) off 0xF8 | TLB HIT  | PA 0x00F8
+[t=   10] P1.T1  R 0x1083  page 16 (outer 1, inner 0) off 0x83 | TLB HIT  | PA 0x0183
+[t=   11] P1.T1  R 0x1243  page 18 (outer 1, inner 2) off 0x43 | TLB HIT  | PA 0x0043
+[t=   12] P1.T1  R 0x102A  page 16 (outer 1, inner 0) off 0x2A | TLB HIT  | PA 0x012A
+[t=   13] P1.T1  R 0x10CA  page 16 (outer 1, inner 0) off 0xCA | TLB HIT  | PA 0x01CA
+[t=   14] P1.T1  R 0x11D2  page 17 (outer 1, inner 1) off 0xD2 | TLB HIT  | PA 0x02D2
+[t=   15] P1.T1  W 0x12A3  page 18 (outer 1, inner 2) off 0xA3 | TLB HIT  | PA 0x00A3
+[t=   16] P1.T1  R 0x1168  page 17 (outer 1, inner 1) off 0x68 | TLB HIT  | PA 0x0268
+[t=   17] P1.T1  R 0x1153  page 17 (outer 1, inner 1) off 0x53 | TLB HIT  | PA 0x0253
+[t=   18] P1.T1  R 0x1045  page 16 (outer 1, inner 0) off 0x45 | TLB HIT  | PA 0x0145
+[t=   19] P1.T1  R 0x1271  page 18 (outer 1, inner 2) off 0x71 | TLB HIT  | PA 0x0071
+[t=   20] P1.T1  R 0x1911  page 25 (outer 1, inner 9) off 0x11 | TLB MISS | PAGE FAULT -> frame 4 (free frame) | PA 0x0411
+[t=   21] P1.T1  R 0x18D2  page 24 (outer 1, inner 8) off 0xD2 | TLB MISS | PAGE FAULT -> frame 5 (free frame) | PA 0x05D2
+[t=   22] P1.T1  R 0x1959  page 25 (outer 1, inner 9) off 0x59 | TLB HIT  | PA 0x0459
+[t=   23] P1.T1  R 0x1A70  page 26 (outer 1, inner 10) off 0x70 | TLB MISS | PAGE FAULT -> frame 6 (free frame) | PA 0x0670
+[t=   24] P1.T1  R 0x1913  page 25 (outer 1, inner 9) off 0x13 | TLB HIT  | PA 0x0413
+[t=   25] P1.T1  W 0x1867  page 24 (outer 1, inner 8) off 0x67 | TLB HIT  | PA 0x0567
+[t=   26] P1.T1  R 0x1AB2  page 26 (outer 1, inner 10) off 0xB2 | TLB HIT  | PA 0x06B2
+[t=   27] P1.T1  R 0x1AD3  page 26 (outer 1, inner 10) off 0xD3 | TLB HIT  | PA 0x06D3
+[t=   28] P1.T1  R 0x1A0F  page 26 (outer 1, inner 10) off 0x0F | TLB HIT  | PA 0x060F
+[t=   29] P1.T1  R 0x19A4  page 25 (outer 1, inner 9) off 0xA4 | TLB HIT  | PA 0x04A4
+[t=   30] P1.T1  W 0x18C6  page 24 (outer 1, inner 8) off 0xC6 | TLB HIT  | PA 0x05C6
+[t=   31] P1.T1  W 0x1137  page 17 (outer 1, inner 1) off 0x37 | TLB HIT  | PA 0x0237
+[t=   32] P1.T1  R 0x1A21  page 26 (outer 1, inner 10) off 0x21 | TLB HIT  | PA 0x0621
+[t=   33] P1.T1  W 0x1ADE  page 26 (outer 1, inner 10) off 0xDE | TLB HIT  | PA 0x06DE
+[t=   34] P1.T1  R 0x19E0  page 25 (outer 1, inner 9) off 0xE0 | TLB HIT  | PA 0x04E0
+[t=   35] P1.T1  W 0x18E4  page 24 (outer 1, inner 8) off 0xE4 | TLB HIT  | PA 0x05E4
+[t=   36] P1.T1  W 0x1881  page 24 (outer 1, inner 8) off 0x81 | TLB HIT  | PA 0x0581
+[t=   37] P1.T1  R 0x1AE8  page 26 (outer 1, inner 10) off 0xE8 | TLB HIT  | PA 0x06E8
+[t=   38] P1.T1  R 0x1A59  page 26 (outer 1, inner 10) off 0x59 | TLB HIT  | PA 0x0659
+[t=   39] P1.T1  R 0x18F6  page 24 (outer 1, inner 8) off 0xF6 | TLB HIT  | PA 0x05F6
+[t=   40] FINISH   P1.T1  turnaround=40 wait=0
+[t=   40] DISPATCH P1.T2  (runs to completion)
+[t=   40] THREAD SWITCH  -> P1.T2 (same address space)
+[t=   40] P1.T2  R 0x3128  page 49 (outer 3, inner 1) off 0x28 | TLB MISS | PAGE FAULT -> frame 7 (free frame) | PA 0x0728
+[t=   41] P1.T2  R 0x31A8  page 49 (outer 3, inner 1) off 0xA8 | TLB HIT  | PA 0x07A8
+[t=   42] P1.T2  R 0x3181  page 49 (outer 3, inner 1) off 0x81 | TLB HIT  | PA 0x0781
+[t=   43] P1.T2  R 0x32D6  page 50 (outer 3, inner 2) off 0xD6 | TLB MISS | PAGE FAULT -> frame 8 (free frame) | PA 0x08D6
+[t=   44] P1.T2  W 0x32FE  page 50 (outer 3, inner 2) off 0xFE | TLB HIT  | PA 0x08FE
+[t=   45] P1.T2  R 0x30DE  page 48 (outer 3, inner 0) off 0xDE | TLB MISS | PAGE FAULT -> frame 9 (free frame) | PA 0x09DE
+[t=   46] P1.T2  R 0x322F  page 50 (outer 3, inner 2) off 0x2F | TLB HIT  | PA 0x082F
+[t=   47] P1.T2  W 0x300F  page 48 (outer 3, inner 0) off 0x0F | TLB HIT  | PA 0x090F
+[t=   48] P1.T2  W 0x31C9  page 49 (outer 3, inner 1) off 0xC9 | TLB HIT  | PA 0x07C9
+[t=   49] P1.T2  R 0x3136  page 49 (outer 3, inner 1) off 0x36 | TLB HIT  | PA 0x0736
+[t=   50] P1.T2  W 0x397D  page 57 (outer 3, inner 9) off 0x7D | TLB MISS | PAGE FAULT -> frame 10 (free frame) | PA 0x0A7D
+[t=   51] P1.T2  R 0x3267  page 50 (outer 3, inner 2) off 0x67 | TLB HIT  | PA 0x0867
+[t=   52] P1.T2  R 0x3A07  page 58 (outer 3, inner 10) off 0x07 | TLB MISS | PAGE FAULT -> frame 11 (free frame) | PA 0x0B07
+[t=   53] P1.T2  W 0x3AFD  page 58 (outer 3, inner 10) off 0xFD | TLB HIT  | PA 0x0BFD
+[t=   54] P1.T2  W 0x3ADF  page 58 (outer 3, inner 10) off 0xDF | TLB HIT  | PA 0x0BDF
+[t=   55] P1.T2  R 0x3A6F  page 58 (outer 3, inner 10) off 0x6F | TLB HIT  | PA 0x0B6F
+[t=   56] P1.T2  W 0x3844  page 56 (outer 3, inner 8) off 0x44 | TLB MISS | PAGE FAULT -> frame 12 (free frame) | PA 0x0C44
+[t=   57] P1.T2  W 0x397F  page 57 (outer 3, inner 9) off 0x7F | TLB HIT  | PA 0x0A7F
+[t=   58] P1.T2  R 0x3A18  page 58 (outer 3, inner 10) off 0x18 | TLB HIT  | PA 0x0B18
+[t=   59] P1.T2  R 0x3843  page 56 (outer 3, inner 8) off 0x43 | TLB HIT  | PA 0x0C43
+[t=   60] P1.T2  R 0x3962  page 57 (outer 3, inner 9) off 0x62 | TLB HIT  | PA 0x0A62
+[t=   61] P1.T2  W 0x39A5  page 57 (outer 3, inner 9) off 0xA5 | TLB HIT  | PA 0x0AA5
+[t=   62] P1.T2  R 0x38C5  page 56 (outer 3, inner 8) off 0xC5 | TLB HIT  | PA 0x0CC5
+[t=   63] P1.T2  R 0x3976  page 57 (outer 3, inner 9) off 0x76 | TLB HIT  | PA 0x0A76
+[t=   64] FINISH   P1.T2  turnaround=64 wait=40
+[t=   64] DISPATCH P2.T1  (runs to completion)
+[t=   64] CONTEXT SWITCH -> P2
+[t=   64] P2.T1  W 0x22D5  page 34 (outer 2, inner 2) off 0xD5 | TLB MISS | PAGE FAULT -> frame 13 (free frame) | PA 0x0DD5
+[t=   65] P2.T1  R 0x214E  page 33 (outer 2, inner 1) off 0x4E | TLB MISS | PAGE FAULT -> frame 14 (free frame) | PA 0x0E4E
+[t=   66] P2.T1  R 0x2001  page 32 (outer 2, inner 0) off 0x01 | TLB MISS | PAGE FAULT -> frame 15 (free frame) | PA 0x0F01
+[t=   67] P2.T1  R 0x2193  page 33 (outer 2, inner 1) off 0x93 | TLB HIT  | PA 0x0E93
+[t=   68] P2.T1  R 0x2163  page 33 (outer 2, inner 1) off 0x63 | TLB HIT  | PA 0x0E63
+[t=   69] P2.T1  R 0x29BA  page 41 (outer 2, inner 9) off 0xBA | TLB MISS | PAGE FAULT -> frame 3 (evicted P1 page 31, clean) | PA 0x03BA
+[t=   70] P2.T1  R 0x29F6  page 41 (outer 2, inner 9) off 0xF6 | TLB HIT  | PA 0x03F6
+[t=   71] P2.T1  R 0x212C  page 33 (outer 2, inner 1) off 0x2C | TLB HIT  | PA 0x0E2C
+[t=   72] P2.T1  R 0x20EB  page 32 (outer 2, inner 0) off 0xEB | TLB HIT  | PA 0x0FEB
+[t=   73] P2.T1  W 0x20D8  page 32 (outer 2, inner 0) off 0xD8 | TLB HIT  | PA 0x0FD8
+[t=   74] P2.T1  R 0x2102  page 33 (outer 2, inner 1) off 0x02 | TLB HIT  | PA 0x0E02
+[t=   75] P2.T1  W 0x21A6  page 33 (outer 2, inner 1) off 0xA6 | TLB HIT  | PA 0x0EA6
+[t=   76] P2.T1  W 0x21E8  page 33 (outer 2, inner 1) off 0xE8 | TLB HIT  | PA 0x0EE8
+[t=   77] P2.T1  R 0x2293  page 34 (outer 2, inner 2) off 0x93 | TLB HIT  | PA 0x0D93
+[t=   78] P2.T1  W 0x2120  page 33 (outer 2, inner 1) off 0x20 | TLB HIT  | PA 0x0E20
+[t=   79] P2.T1  R 0x2271  page 34 (outer 2, inner 2) off 0x71 | TLB HIT  | PA 0x0D71
+[t=   80] P2.T1  W 0x2F12  page 47 (outer 2, inner 15) off 0x12 | TLB MISS | PAGE FAULT -> frame 4 (evicted P1 page 25, clean) | PA 0x0412
+[t=   81] P2.T1  W 0x22D4  page 34 (outer 2, inner 2) off 0xD4 | TLB HIT  | PA 0x0DD4
+[t=   82] P2.T1  R 0x2066  page 32 (outer 2, inner 0) off 0x66 | TLB HIT  | PA 0x0F66
+[t=   83] P2.T1  R 0x2144  page 33 (outer 2, inner 1) off 0x44 | TLB HIT  | PA 0x0E44
+[t=   84] P2.T1  R 0x200A  page 32 (outer 2, inner 0) off 0x0A | TLB HIT  | PA 0x0F0A
+[t=   85] P2.T1  R 0x22D1  page 34 (outer 2, inner 2) off 0xD1 | TLB HIT  | PA 0x0DD1
+[t=   86] P2.T1  R 0x227D  page 34 (outer 2, inner 2) off 0x7D | TLB HIT  | PA 0x0D7D
+[t=   87] P2.T1  R 0x214F  page 33 (outer 2, inner 1) off 0x4F | TLB HIT  | PA 0x0E4F
+[t=   88] P2.T1  R 0x224C  page 34 (outer 2, inner 2) off 0x4C | TLB HIT  | PA 0x0D4C
+[t=   89] P2.T1  R 0x22A9  page 34 (outer 2, inner 2) off 0xA9 | TLB HIT  | PA 0x0DA9
+[t=   90] P2.T1  W 0x2104  page 33 (outer 2, inner 1) off 0x04 | TLB HIT  | PA 0x0E04
+[t=   91] P2.T1  W 0x21AA  page 33 (outer 2, inner 1) off 0xAA | TLB HIT  | PA 0x0EAA
+[t=   92] P2.T1  R 0x20EA  page 32 (outer 2, inner 0) off 0xEA | TLB HIT  | PA 0x0FEA
+[t=   93] P2.T1  W 0x200A  page 32 (outer 2, inner 0) off 0x0A | TLB HIT  | PA 0x0F0A
+[t=   94] P2.T1  R 0x20CA  page 32 (outer 2, inner 0) off 0xCA | TLB HIT  | PA 0x0FCA
+[t=   95] P2.T1  R 0x2037  page 32 (outer 2, inner 0) off 0x37 | TLB HIT  | PA 0x0F37
+[t=   96] P2.T1  W 0x2973  page 41 (outer 2, inner 9) off 0x73 | TLB HIT  | PA 0x0373
+[t=   97] P2.T1  R 0x2941  page 41 (outer 2, inner 9) off 0x41 | TLB HIT  | PA 0x0341
+[t=   98] P2.T1  W 0x28A9  page 40 (outer 2, inner 8) off 0xA9 | TLB MISS | PAGE FAULT -> frame 5 (evicted P1 page 24, dirty -> write-back) | PA 0x05A9
+[t=   99] P2.T1  R 0x2806  page 40 (outer 2, inner 8) off 0x06 | TLB HIT  | PA 0x0506
+[t=  100] P2.T1  W 0x28A9  page 40 (outer 2, inner 8) off 0xA9 | TLB HIT  | PA 0x05A9
+[t=  101] P2.T1  R 0x2861  page 40 (outer 2, inner 8) off 0x61 | TLB HIT  | PA 0x0561
+[t=  102] P2.T1  R 0x299E  page 41 (outer 2, inner 9) off 0x9E | TLB HIT  | PA 0x039E
+[t=  103] P2.T1  R 0x2ACF  page 42 (outer 2, inner 10) off 0xCF | TLB MISS | PAGE FAULT -> frame 6 (evicted P1 page 26, dirty -> write-back) | PA 0x06CF
+[t=  104] P2.T1  R 0x29C4  page 41 (outer 2, inner 9) off 0xC4 | TLB HIT  | PA 0x03C4
+[t=  105] P2.T1  R 0x2948  page 41 (outer 2, inner 9) off 0x48 | TLB HIT  | PA 0x0348
+[t=  106] P2.T1  R 0x2986  page 41 (outer 2, inner 9) off 0x86 | TLB HIT  | PA 0x0386
+[t=  107] P2.T1  R 0x29EA  page 41 (outer 2, inner 9) off 0xEA | TLB HIT  | PA 0x03EA
+[t=  108] P2.T1  R 0x2A3B  page 42 (outer 2, inner 10) off 0x3B | TLB HIT  | PA 0x063B
+[t=  109] P2.T1  R 0x2AFD  page 42 (outer 2, inner 10) off 0xFD | TLB HIT  | PA 0x06FD
+[t=  110] P2.T1  W 0x2AE6  page 42 (outer 2, inner 10) off 0xE6 | TLB HIT  | PA 0x06E6
+[t=  111] P2.T1  R 0x2AE1  page 42 (outer 2, inner 10) off 0xE1 | TLB HIT  | PA 0x06E1
+[t=  112] P2.T1  R 0x2A0A  page 42 (outer 2, inner 10) off 0x0A | TLB HIT  | PA 0x060A
+[t=  113] P2.T1  R 0x286B  page 40 (outer 2, inner 8) off 0x6B | TLB HIT  | PA 0x056B
+[t=  114] P2.T1  R 0x2997  page 41 (outer 2, inner 9) off 0x97 | TLB HIT  | PA 0x0397
+[t=  115] P2.T1  R 0x28A9  page 40 (outer 2, inner 8) off 0xA9 | TLB HIT  | PA 0x05A9
+[t=  116] P2.T1  R 0x2ADB  page 42 (outer 2, inner 10) off 0xDB | TLB HIT  | PA 0x06DB
+[t=  117] P2.T1  R 0x288B  page 40 (outer 2, inner 8) off 0x8B | TLB HIT  | PA 0x058B
+[t=  118] P2.T1  R 0x2919  page 41 (outer 2, inner 9) off 0x19 | TLB HIT  | PA 0x0319
+[t=  119] P2.T1  W 0x2A21  page 42 (outer 2, inner 10) off 0x21 | TLB HIT  | PA 0x0621
+[t=  120] P2.T1  W 0x2819  page 40 (outer 2, inner 8) off 0x19 | TLB HIT  | PA 0x0519
+[t=  121] P2.T1  W 0x29D7  page 41 (outer 2, inner 9) off 0xD7 | TLB HIT  | PA 0x03D7
+[t=  122] P2.T1  W 0x2AAF  page 42 (outer 2, inner 10) off 0xAF | TLB HIT  | PA 0x06AF
+[t=  123] P2.T1  R 0x28A7  page 40 (outer 2, inner 8) off 0xA7 | TLB HIT  | PA 0x05A7
+[t=  124] P2.T1  R 0x28DE  page 40 (outer 2, inner 8) off 0xDE | TLB HIT  | PA 0x05DE
+[t=  125] P2.T1  R 0x2935  page 41 (outer 2, inner 9) off 0x35 | TLB HIT  | PA 0x0335
+[t=  126] P2.T1  R 0x2EF8  page 46 (outer 2, inner 14) off 0xF8 | TLB MISS | PAGE FAULT -> frame 7 (evicted P1 page 49, dirty -> write-back) | PA 0x07F8
+[t=  127] P2.T1  R 0x2A02  page 42 (outer 2, inner 10) off 0x02 | TLB HIT  | PA 0x0602
+[t=  128] FINISH   P2.T1  turnaround=128 wait=64
+[t=  128] DISPATCH P2.T2  (runs to completion)
+[t=  128] THREAD SWITCH  -> P2.T2 (same address space)
+[t=  128] P2.T2  R 0x62F1  page 98 (outer 6, inner 2) off 0xF1 | TLB MISS | PAGE FAULT -> frame 8 (evicted P1 page 50, dirty -> write-back) | PA 0x08F1
+[t=  129] P2.T2  W 0x62E9  page 98 (outer 6, inner 2) off 0xE9 | TLB HIT  | PA 0x08E9
+[t=  130] P2.T2  W 0x6069  page 96 (outer 6, inner 0) off 0x69 | TLB MISS | PAGE FAULT -> frame 9 (evicted P1 page 48, dirty -> write-back) | PA 0x0969
+[t=  131] P2.T2  W 0x611D  page 97 (outer 6, inner 1) off 0x1D | TLB MISS | PAGE FAULT -> frame 10 (evicted P1 page 57, dirty -> write-back) | PA 0x0A1D
+[t=  132] P2.T2  R 0x6289  page 98 (outer 6, inner 2) off 0x89 | TLB HIT  | PA 0x0889
+[t=  133] P2.T2  W 0x600C  page 96 (outer 6, inner 0) off 0x0C | TLB HIT  | PA 0x090C
+[t=  134] P2.T2  R 0x6046  page 96 (outer 6, inner 0) off 0x46 | TLB HIT  | PA 0x0946
+[t=  135] P2.T2  R 0x61AC  page 97 (outer 6, inner 1) off 0xAC | TLB HIT  | PA 0x0AAC
+[t=  136] P2.T2  R 0x6980  page 105 (outer 6, inner 9) off 0x80 | TLB MISS | PAGE FAULT -> frame 11 (evicted P1 page 58, dirty -> write-back) | PA 0x0B80
+[t=  137] P2.T2  R 0x695A  page 105 (outer 6, inner 9) off 0x5A | TLB HIT  | PA 0x0B5A
+[t=  138] P2.T2  R 0x6A6B  page 106 (outer 6, inner 10) off 0x6B | TLB MISS | PAGE FAULT -> frame 12 (evicted P1 page 56, dirty -> write-back) | PA 0x0C6B
+[t=  139] P2.T2  R 0x69D8  page 105 (outer 6, inner 9) off 0xD8 | TLB HIT  | PA 0x0BD8
+[t=  140] P2.T2  R 0x6925  page 105 (outer 6, inner 9) off 0x25 | TLB HIT  | PA 0x0B25
+[t=  141] P2.T2  R 0x6ACE  page 106 (outer 6, inner 10) off 0xCE | TLB HIT  | PA 0x0CCE
+[t=  142] P2.T2  R 0x64E5  page 100 (outer 6, inner 4) off 0xE5 | TLB MISS | PAGE FAULT -> frame 0 (evicted P1 page 18, dirty -> write-back) | PA 0x00E5
+[t=  143] P2.T2  R 0x68F7  page 104 (outer 6, inner 8) off 0xF7 | TLB MISS | PAGE FAULT -> frame 1 (evicted P1 page 16, dirty -> write-back) | PA 0x01F7
+[t=  144] FINISH   P2.T2  turnaround=144 wait=128
+[t=  144] DISPATCH P3.T1  (runs to completion)
+[t=  144] CONTEXT SWITCH -> P3
+[t=  144] P3.T1  R 0x4000  page 64 (outer 4, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 2 (evicted P1 page 17, dirty -> write-back) | PA 0x0200
+[t=  145] P3.T1  R 0x421F  page 66 (outer 4, inner 2) off 0x1F | TLB MISS | PAGE FAULT -> frame 13 (evicted P2 page 34, dirty -> write-back) | PA 0x0D1F
+[t=  146] P3.T1  R 0x41E1  page 65 (outer 4, inner 1) off 0xE1 | TLB MISS | PAGE FAULT -> frame 7 (evicted P2 page 46, clean) | PA 0x07E1
+[t=  147] P3.T1  R 0x418A  page 65 (outer 4, inner 1) off 0x8A | TLB HIT  | PA 0x078A
+[t=  148] P3.T1  R 0x405F  page 64 (outer 4, inner 0) off 0x5F | TLB HIT  | PA 0x025F
+[t=  149] P3.T1  R 0x40E3  page 64 (outer 4, inner 0) off 0xE3 | TLB HIT  | PA 0x02E3
+[t=  150] P3.T1  R 0x4179  page 65 (outer 4, inner 1) off 0x79 | TLB HIT  | PA 0x0779
+[t=  151] P3.T1  R 0x40D2  page 64 (outer 4, inner 0) off 0xD2 | TLB HIT  | PA 0x02D2
+[t=  152] P3.T1  W 0x4138  page 65 (outer 4, inner 1) off 0x38 | TLB HIT  | PA 0x0738
+[t=  153] P3.T1  R 0x4076  page 64 (outer 4, inner 0) off 0x76 | TLB HIT  | PA 0x0276
+[t=  154] P3.T1  W 0x4274  page 66 (outer 4, inner 2) off 0x74 | TLB HIT  | PA 0x0D74
+[t=  155] P3.T1  W 0x41E5  page 65 (outer 4, inner 1) off 0xE5 | TLB HIT  | PA 0x07E5
+[t=  156] P3.T1  R 0x429A  page 66 (outer 4, inner 2) off 0x9A | TLB HIT  | PA 0x0D9A
+[t=  157] P3.T1  R 0x415E  page 65 (outer 4, inner 1) off 0x5E | TLB HIT  | PA 0x075E
+[t=  158] P3.T1  W 0x40C0  page 64 (outer 4, inner 0) off 0xC0 | TLB HIT  | PA 0x02C0
+[t=  159] P3.T1  W 0x4155  page 65 (outer 4, inner 1) off 0x55 | TLB HIT  | PA 0x0755
+[t=  160] P3.T1  W 0x4871  page 72 (outer 4, inner 8) off 0x71 | TLB MISS | PAGE FAULT -> frame 11 (evicted P2 page 105, clean) | PA 0x0B71
+[t=  161] P3.T1  R 0x4AE5  page 74 (outer 4, inner 10) off 0xE5 | TLB MISS | PAGE FAULT -> frame 12 (evicted P2 page 106, clean) | PA 0x0CE5
+[t=  162] P3.T1  W 0x4A62  page 74 (outer 4, inner 10) off 0x62 | TLB HIT  | PA 0x0C62
+[t=  163] P3.T1  R 0x4A42  page 74 (outer 4, inner 10) off 0x42 | TLB HIT  | PA 0x0C42
+[t=  164] P3.T1  R 0x4A30  page 74 (outer 4, inner 10) off 0x30 | TLB HIT  | PA 0x0C30
+[t=  165] P3.T1  R 0x4826  page 72 (outer 4, inner 8) off 0x26 | TLB HIT  | PA 0x0B26
+[t=  166] P3.T1  R 0x4D39  page 77 (outer 4, inner 13) off 0x39 | TLB MISS | PAGE FAULT -> frame 14 (evicted P2 page 33, dirty -> write-back) | PA 0x0E39
+[t=  167] P3.T1  R 0x4905  page 73 (outer 4, inner 9) off 0x05 | TLB MISS | PAGE FAULT -> frame 15 (evicted P2 page 32, dirty -> write-back) | PA 0x0F05
+[t=  168] P3.T1  R 0x489C  page 72 (outer 4, inner 8) off 0x9C | TLB HIT  | PA 0x0B9C
+[t=  169] P3.T1  R 0x48DF  page 72 (outer 4, inner 8) off 0xDF | TLB HIT  | PA 0x0BDF
+[t=  170] P3.T1  W 0x4A64  page 74 (outer 4, inner 10) off 0x64 | TLB HIT  | PA 0x0C64
+[t=  171] P3.T1  R 0x4A27  page 74 (outer 4, inner 10) off 0x27 | TLB HIT  | PA 0x0C27
+[t=  172] P3.T1  R 0x4AC6  page 74 (outer 4, inner 10) off 0xC6 | TLB HIT  | PA 0x0CC6
+[t=  173] P3.T1  R 0x48B0  page 72 (outer 4, inner 8) off 0xB0 | TLB HIT  | PA 0x0BB0
+[t=  174] P3.T1  W 0x4909  page 73 (outer 4, inner 9) off 0x09 | TLB HIT  | PA 0x0F09
+[t=  175] P3.T1  R 0x44E2  page 68 (outer 4, inner 4) off 0xE2 | TLB MISS | PAGE FAULT -> frame 3 (evicted P2 page 41, dirty -> write-back) | PA 0x03E2
+[t=  176] FINISH   P3.T1  turnaround=176 wait=144
+[t=  176] DISPATCH P3.T2  (runs to completion)
+[t=  176] THREAD SWITCH  -> P3.T2 (same address space)
+[t=  176] P3.T2  W 0x805C  page 128 (outer 8, inner 0) off 0x5C | TLB MISS | PAGE FAULT -> frame 0 (evicted P2 page 100, clean) | PA 0x005C
+[t=  177] P3.T2  R 0x8031  page 128 (outer 8, inner 0) off 0x31 | TLB HIT  | PA 0x0031
+[t=  178] P3.T2  R 0x816C  page 129 (outer 8, inner 1) off 0x6C | TLB MISS | PAGE FAULT -> frame 1 (evicted P2 page 104, clean) | PA 0x016C
+[t=  179] P3.T2  R 0x80FE  page 128 (outer 8, inner 0) off 0xFE | TLB HIT  | PA 0x00FE
+[t=  180] P3.T2  R 0x80A2  page 128 (outer 8, inner 0) off 0xA2 | TLB HIT  | PA 0x00A2
+[t=  181] P3.T2  R 0x81C8  page 129 (outer 8, inner 1) off 0xC8 | TLB HIT  | PA 0x01C8
+[t=  182] P3.T2  W 0x820B  page 130 (outer 8, inner 2) off 0x0B | TLB MISS | PAGE FAULT -> frame 2 (evicted P3 page 64, dirty -> write-back) | PA 0x020B
+[t=  183] P3.T2  W 0x81A1  page 129 (outer 8, inner 1) off 0xA1 | TLB HIT  | PA 0x01A1
+[t=  184] P3.T2  W 0x81D5  page 129 (outer 8, inner 1) off 0xD5 | TLB HIT  | PA 0x01D5
+[t=  185] P3.T2  R 0x813F  page 129 (outer 8, inner 1) off 0x3F | TLB HIT  | PA 0x013F
+[t=  186] P3.T2  R 0x802A  page 128 (outer 8, inner 0) off 0x2A | TLB HIT  | PA 0x002A
+[t=  187] P3.T2  W 0x82F2  page 130 (outer 8, inner 2) off 0xF2 | TLB HIT  | PA 0x02F2
+[t=  188] P3.T2  R 0x81CE  page 129 (outer 8, inner 1) off 0xCE | TLB HIT  | PA 0x01CE
+[t=  189] P3.T2  R 0x82C1  page 130 (outer 8, inner 2) off 0xC1 | TLB HIT  | PA 0x02C1
+[t=  190] P3.T2  R 0x801C  page 128 (outer 8, inner 0) off 0x1C | TLB HIT  | PA 0x001C
+[t=  191] P3.T2  R 0x8172  page 129 (outer 8, inner 1) off 0x72 | TLB HIT  | PA 0x0172
+[t=  192] P3.T2  R 0x8008  page 128 (outer 8, inner 0) off 0x08 | TLB HIT  | PA 0x0008
+[t=  193] P3.T2  R 0x82E3  page 130 (outer 8, inner 2) off 0xE3 | TLB HIT  | PA 0x02E3
+[t=  194] P3.T2  R 0x82F2  page 130 (outer 8, inner 2) off 0xF2 | TLB HIT  | PA 0x02F2
+[t=  195] P3.T2  R 0x81CB  page 129 (outer 8, inner 1) off 0xCB | TLB HIT  | PA 0x01CB
+[t=  196] P3.T2  R 0x823E  page 130 (outer 8, inner 2) off 0x3E | TLB HIT  | PA 0x023E
+[t=  197] P3.T2  R 0x8D02  page 141 (outer 8, inner 13) off 0x02 | TLB MISS | PAGE FAULT -> frame 4 (evicted P2 page 47, dirty -> write-back) | PA 0x0402
+[t=  198] P3.T2  R 0x80B8  page 128 (outer 8, inner 0) off 0xB8 | TLB HIT  | PA 0x00B8
+[t=  199] P3.T2  W 0x86C3  page 134 (outer 8, inner 6) off 0xC3 | TLB MISS | PAGE FAULT -> frame 3 (evicted P3 page 68, clean) | PA 0x03C3
+[t=  200] P3.T2  R 0x89DA  page 137 (outer 8, inner 9) off 0xDA | TLB MISS | PAGE FAULT -> frame 5 (evicted P2 page 40, dirty -> write-back) | PA 0x05DA
+[t=  201] P3.T2  R 0x89EC  page 137 (outer 8, inner 9) off 0xEC | TLB HIT  | PA 0x05EC
+[t=  202] P3.T2  R 0x8832  page 136 (outer 8, inner 8) off 0x32 | TLB MISS | PAGE FAULT -> frame 4 (evicted P3 page 141, clean) | PA 0x0432
+[t=  203] P3.T2  W 0x888A  page 136 (outer 8, inner 8) off 0x8A | TLB HIT  | PA 0x048A
+[t=  204] P3.T2  R 0x8A97  page 138 (outer 8, inner 10) off 0x97 | TLB MISS | PAGE FAULT -> frame 6 (evicted P2 page 42, dirty -> write-back) | PA 0x0697
+[t=  205] P3.T2  W 0x8876  page 136 (outer 8, inner 8) off 0x76 | TLB HIT  | PA 0x0476
+[t=  206] P3.T2  R 0x89DF  page 137 (outer 8, inner 9) off 0xDF | TLB HIT  | PA 0x05DF
+[t=  207] P3.T2  R 0x884D  page 136 (outer 8, inner 8) off 0x4D | TLB HIT  | PA 0x044D
+[t=  208] P3.T2  W 0x8A3D  page 138 (outer 8, inner 10) off 0x3D | TLB HIT  | PA 0x063D
+[t=  209] P3.T2  R 0x891E  page 137 (outer 8, inner 9) off 0x1E | TLB HIT  | PA 0x051E
+[t=  210] P3.T2  R 0x8AC6  page 138 (outer 8, inner 10) off 0xC6 | TLB HIT  | PA 0x06C6
+[t=  211] P3.T2  R 0x8B10  page 139 (outer 8, inner 11) off 0x10 | TLB MISS | PAGE FAULT -> frame 8 (evicted P2 page 98, dirty -> write-back) | PA 0x0810
+[t=  212] P3.T2  W 0x8AFE  page 138 (outer 8, inner 10) off 0xFE | TLB HIT  | PA 0x06FE
+[t=  213] P3.T2  R 0x8983  page 137 (outer 8, inner 9) off 0x83 | TLB HIT  | PA 0x0583
+[t=  214] P3.T2  R 0x8943  page 137 (outer 8, inner 9) off 0x43 | TLB HIT  | PA 0x0543
+[t=  215] P3.T2  R 0x8AEB  page 138 (outer 8, inner 10) off 0xEB | TLB HIT  | PA 0x06EB
+[t=  216] P3.T2  W 0x8926  page 137 (outer 8, inner 9) off 0x26 | TLB HIT  | PA 0x0526
+[t=  217] P3.T2  W 0x8A35  page 138 (outer 8, inner 10) off 0x35 | TLB HIT  | PA 0x0635
+[t=  218] P3.T2  R 0x8ACA  page 138 (outer 8, inner 10) off 0xCA | TLB HIT  | PA 0x06CA
+[t=  219] P3.T2  W 0x8C87  page 140 (outer 8, inner 12) off 0x87 | TLB MISS | PAGE FAULT -> frame 9 (evicted P2 page 96, dirty -> write-back) | PA 0x0987
+[t=  220] P3.T2  R 0x8989  page 137 (outer 8, inner 9) off 0x89 | TLB HIT  | PA 0x0589
+[t=  221] P3.T2  R 0x8AC2  page 138 (outer 8, inner 10) off 0xC2 | TLB HIT  | PA 0x06C2
+[t=  222] P3.T2  R 0x896D  page 137 (outer 8, inner 9) off 0x6D | TLB HIT  | PA 0x056D
+[t=  223] P3.T2  R 0x8ACB  page 138 (outer 8, inner 10) off 0xCB | TLB HIT  | PA 0x06CB
+[t=  224] FINISH   P3.T2  turnaround=224 wait=176
+[t=  224] DISPATCH P4.T1  (runs to completion)
+[t=  224] CONTEXT SWITCH -> P4
+[t=  224] P4.T1  R 0x50DA  page 80 (outer 5, inner 0) off 0xDA | TLB MISS | PAGE FAULT -> frame 10 (evicted P2 page 97, dirty -> write-back) | PA 0x0ADA
+[t=  225] P4.T1  R 0x5045  page 80 (outer 5, inner 0) off 0x45 | TLB HIT  | PA 0x0A45
+[t=  226] P4.T1  R 0x503D  page 80 (outer 5, inner 0) off 0x3D | TLB HIT  | PA 0x0A3D
+[t=  227] P4.T1  R 0x5296  page 82 (outer 5, inner 2) off 0x96 | TLB MISS | PAGE FAULT -> frame 13 (evicted P3 page 66, dirty -> write-back) | PA 0x0D96
+[t=  228] P4.T1  R 0x50E9  page 80 (outer 5, inner 0) off 0xE9 | TLB HIT  | PA 0x0AE9
+[t=  229] P4.T1  R 0x52A9  page 82 (outer 5, inner 2) off 0xA9 | TLB HIT  | PA 0x0DA9
+[t=  230] P4.T1  R 0x51EC  page 81 (outer 5, inner 1) off 0xEC | TLB MISS | PAGE FAULT -> frame 7 (evicted P3 page 65, dirty -> write-back) | PA 0x07EC
+[t=  231] P4.T1  W 0x5170  page 81 (outer 5, inner 1) off 0x70 | TLB HIT  | PA 0x0770
+[t=  232] P4.T1  R 0x515F  page 81 (outer 5, inner 1) off 0x5F | TLB HIT  | PA 0x075F
+[t=  233] P4.T1  W 0x5064  page 80 (outer 5, inner 0) off 0x64 | TLB HIT  | PA 0x0A64
+[t=  234] P4.T1  R 0x50FF  page 80 (outer 5, inner 0) off 0xFF | TLB HIT  | PA 0x0AFF
+[t=  235] P4.T1  R 0x51BF  page 81 (outer 5, inner 1) off 0xBF | TLB HIT  | PA 0x07BF
+[t=  236] P4.T1  W 0x519A  page 81 (outer 5, inner 1) off 0x9A | TLB HIT  | PA 0x079A
+[t=  237] P4.T1  R 0x52AE  page 82 (outer 5, inner 2) off 0xAE | TLB HIT  | PA 0x0DAE
+[t=  238] P4.T1  R 0x50DF  page 80 (outer 5, inner 0) off 0xDF | TLB HIT  | PA 0x0ADF
+[t=  239] P4.T1  W 0x5271  page 82 (outer 5, inner 2) off 0x71 | TLB HIT  | PA 0x0D71
+[t=  240] P4.T1  W 0x5211  page 82 (outer 5, inner 2) off 0x11 | TLB HIT  | PA 0x0D11
+[t=  241] P4.T1  R 0x5150  page 81 (outer 5, inner 1) off 0x50 | TLB HIT  | PA 0x0750
+[t=  242] P4.T1  R 0x52E9  page 82 (outer 5, inner 2) off 0xE9 | TLB HIT  | PA 0x0DE9
+[t=  243] P4.T1  R 0x52E4  page 82 (outer 5, inner 2) off 0xE4 | TLB HIT  | PA 0x0DE4
+[t=  244] P4.T1  R 0x5212  page 82 (outer 5, inner 2) off 0x12 | TLB HIT  | PA 0x0D12
+[t=  245] P4.T1  R 0x5056  page 80 (outer 5, inner 0) off 0x56 | TLB HIT  | PA 0x0A56
+[t=  246] P4.T1  R 0x52A0  page 82 (outer 5, inner 2) off 0xA0 | TLB HIT  | PA 0x0DA0
+[t=  247] P4.T1  R 0x5246  page 82 (outer 5, inner 2) off 0x46 | TLB HIT  | PA 0x0D46
+[t=  248] P4.T1  R 0x508D  page 80 (outer 5, inner 0) off 0x8D | TLB HIT  | PA 0x0A8D
+[t=  249] P4.T1  W 0x5229  page 82 (outer 5, inner 2) off 0x29 | TLB HIT  | PA 0x0D29
+[t=  250] P4.T1  R 0x5208  page 82 (outer 5, inner 2) off 0x08 | TLB HIT  | PA 0x0D08
+[t=  251] P4.T1  R 0x5028  page 80 (outer 5, inner 0) off 0x28 | TLB HIT  | PA 0x0A28
+[t=  252] P4.T1  R 0x5065  page 80 (outer 5, inner 0) off 0x65 | TLB HIT  | PA 0x0A65
+[t=  253] P4.T1  R 0x50DE  page 80 (outer 5, inner 0) off 0xDE | TLB HIT  | PA 0x0ADE
+[t=  254] P4.T1  R 0x527E  page 82 (outer 5, inner 2) off 0x7E | TLB HIT  | PA 0x0D7E
+[t=  255] P4.T1  W 0x512D  page 81 (outer 5, inner 1) off 0x2D | TLB HIT  | PA 0x072D
+[t=  256] P4.T1  W 0x5158  page 81 (outer 5, inner 1) off 0x58 | TLB HIT  | PA 0x0758
+[t=  257] P4.T1  W 0x50A9  page 80 (outer 5, inner 0) off 0xA9 | TLB HIT  | PA 0x0AA9
+[t=  258] P4.T1  R 0x597F  page 89 (outer 5, inner 9) off 0x7F | TLB MISS | PAGE FAULT -> frame 14 (evicted P3 page 77, clean) | PA 0x0E7F
+[t=  259] P4.T1  R 0x5030  page 80 (outer 5, inner 0) off 0x30 | TLB HIT  | PA 0x0A30
+[t=  260] P4.T1  R 0x5102  page 81 (outer 5, inner 1) off 0x02 | TLB HIT  | PA 0x0702
+[t=  261] P4.T1  W 0x5076  page 80 (outer 5, inner 0) off 0x76 | TLB HIT  | PA 0x0A76
+[t=  262] P4.T1  W 0x5198  page 81 (outer 5, inner 1) off 0x98 | TLB HIT  | PA 0x0798
+[t=  263] P4.T1  R 0x5185  page 81 (outer 5, inner 1) off 0x85 | TLB HIT  | PA 0x0785
+[t=  264] P4.T1  W 0x5972  page 89 (outer 5, inner 9) off 0x72 | TLB HIT  | PA 0x0E72
+[t=  265] P4.T1  W 0x5943  page 89 (outer 5, inner 9) off 0x43 | TLB HIT  | PA 0x0E43
+[t=  266] P4.T1  R 0x5863  page 88 (outer 5, inner 8) off 0x63 | TLB MISS | PAGE FAULT -> frame 15 (evicted P3 page 73, dirty -> write-back) | PA 0x0F63
+[t=  267] P4.T1  R 0x58CC  page 88 (outer 5, inner 8) off 0xCC | TLB HIT  | PA 0x0FCC
+[t=  268] P4.T1  R 0x587B  page 88 (outer 5, inner 8) off 0x7B | TLB HIT  | PA 0x0F7B
+[t=  269] P4.T1  W 0x59E6  page 89 (outer 5, inner 9) off 0xE6 | TLB HIT  | PA 0x0EE6
+[t=  270] P4.T1  W 0x58C2  page 88 (outer 5, inner 8) off 0xC2 | TLB HIT  | PA 0x0FC2
+[t=  271] P4.T1  R 0x597C  page 89 (outer 5, inner 9) off 0x7C | TLB HIT  | PA 0x0E7C
+[t=  272] P4.T1  R 0x5833  page 88 (outer 5, inner 8) off 0x33 | TLB HIT  | PA 0x0F33
+[t=  273] P4.T1  R 0x596C  page 89 (outer 5, inner 9) off 0x6C | TLB HIT  | PA 0x0E6C
+[t=  274] P4.T1  W 0x59D5  page 89 (outer 5, inner 9) off 0xD5 | TLB HIT  | PA 0x0ED5
+[t=  275] P4.T1  R 0x59C5  page 89 (outer 5, inner 9) off 0xC5 | TLB HIT  | PA 0x0EC5
+[t=  276] P4.T1  R 0x5859  page 88 (outer 5, inner 8) off 0x59 | TLB HIT  | PA 0x0F59
+[t=  277] P4.T1  W 0x5817  page 88 (outer 5, inner 8) off 0x17 | TLB HIT  | PA 0x0F17
+[t=  278] P4.T1  R 0x581A  page 88 (outer 5, inner 8) off 0x1A | TLB HIT  | PA 0x0F1A
+[t=  279] P4.T1  R 0x580B  page 88 (outer 5, inner 8) off 0x0B | TLB HIT  | PA 0x0F0B
+[t=  280] P4.T1  R 0x5ABE  page 90 (outer 5, inner 10) off 0xBE | TLB MISS | PAGE FAULT -> frame 0 (evicted P3 page 128, dirty -> write-back) | PA 0x00BE
+[t=  281] P4.T1  R 0x59ED  page 89 (outer 5, inner 9) off 0xED | TLB HIT  | PA 0x0EED
+[t=  282] P4.T1  W 0x592F  page 89 (outer 5, inner 9) off 0x2F | TLB HIT  | PA 0x0E2F
+[t=  283] P4.T1  W 0x5894  page 88 (outer 5, inner 8) off 0x94 | TLB HIT  | PA 0x0F94
+[t=  284] P4.T1  R 0x5A8E  page 90 (outer 5, inner 10) off 0x8E | TLB HIT  | PA 0x008E
+[t=  285] P4.T1  R 0x5AB9  page 90 (outer 5, inner 10) off 0xB9 | TLB HIT  | PA 0x00B9
+[t=  286] P4.T1  R 0x58CB  page 88 (outer 5, inner 8) off 0xCB | TLB HIT  | PA 0x0FCB
+[t=  287] P4.T1  W 0x5A29  page 90 (outer 5, inner 10) off 0x29 | TLB HIT  | PA 0x0029
+[t=  288] P4.T1  R 0x58AC  page 88 (outer 5, inner 8) off 0xAC | TLB HIT  | PA 0x0FAC
+[t=  289] P4.T1  R 0x5AC6  page 90 (outer 5, inner 10) off 0xC6 | TLB HIT  | PA 0x00C6
+[t=  290] P4.T1  R 0x58E8  page 88 (outer 5, inner 8) off 0xE8 | TLB HIT  | PA 0x0FE8
+[t=  291] P4.T1  W 0x58D8  page 88 (outer 5, inner 8) off 0xD8 | TLB HIT  | PA 0x0FD8
+[t=  292] P4.T1  R 0x5AFE  page 90 (outer 5, inner 10) off 0xFE | TLB HIT  | PA 0x00FE
+[t=  293] P4.T1  R 0x5AC7  page 90 (outer 5, inner 10) off 0xC7 | TLB HIT  | PA 0x00C7
+[t=  294] P4.T1  R 0x591E  page 89 (outer 5, inner 9) off 0x1E | TLB HIT  | PA 0x0E1E
+[t=  295] P4.T1  W 0x598B  page 89 (outer 5, inner 9) off 0x8B | TLB HIT  | PA 0x0E8B
+[t=  296] P4.T1  R 0x5AA5  page 90 (outer 5, inner 10) off 0xA5 | TLB HIT  | PA 0x00A5
+[t=  297] P4.T1  W 0x5AEB  page 90 (outer 5, inner 10) off 0xEB | TLB HIT  | PA 0x00EB
+[t=  298] P4.T1  W 0x599F  page 89 (outer 5, inner 9) off 0x9F | TLB HIT  | PA 0x0E9F
+[t=  299] P4.T1  R 0x58AB  page 88 (outer 5, inner 8) off 0xAB | TLB HIT  | PA 0x0FAB
+[t=  300] P4.T1  R 0x59DD  page 89 (outer 5, inner 9) off 0xDD | TLB HIT  | PA 0x0EDD
+[t=  301] P4.T1  R 0x59A9  page 89 (outer 5, inner 9) off 0xA9 | TLB HIT  | PA 0x0EA9
+[t=  302] P4.T1  R 0x5A9C  page 90 (outer 5, inner 10) off 0x9C | TLB HIT  | PA 0x009C
+[t=  303] P4.T1  R 0x5F8F  page 95 (outer 5, inner 15) off 0x8F | TLB MISS | PAGE FAULT -> frame 1 (evicted P3 page 129, dirty -> write-back) | PA 0x018F
+[t=  304] FINISH   P4.T1  turnaround=304 wait=224
+[t=  304] DISPATCH P4.T2  (runs to completion)
+[t=  304] THREAD SWITCH  -> P4.T2 (same address space)
+[t=  304] P4.T2  R 0xAB3C  page 171 (outer 10, inner 11) off 0x3C | TLB MISS | PAGE FAULT -> frame 2 (evicted P3 page 130, dirty -> write-back) | PA 0x023C
+[t=  305] P4.T2  R 0xA23A  page 162 (outer 10, inner 2) off 0x3A | TLB MISS | PAGE FAULT -> frame 3 (evicted P3 page 134, dirty -> write-back) | PA 0x033A
+[t=  306] P4.T2  R 0xA1D0  page 161 (outer 10, inner 1) off 0xD0 | TLB MISS | PAGE FAULT -> frame 4 (evicted P3 page 136, dirty -> write-back) | PA 0x04D0
+[t=  307] P4.T2  W 0xA2FB  page 162 (outer 10, inner 2) off 0xFB | TLB HIT  | PA 0x03FB
+[t=  308] P4.T2  W 0xA2A3  page 162 (outer 10, inner 2) off 0xA3 | TLB HIT  | PA 0x03A3
+[t=  309] P4.T2  R 0xA1A9  page 161 (outer 10, inner 1) off 0xA9 | TLB HIT  | PA 0x04A9
+[t=  310] P4.T2  W 0xA830  page 168 (outer 10, inner 8) off 0x30 | TLB MISS | PAGE FAULT -> frame 5 (evicted P3 page 137, dirty -> write-back) | PA 0x0530
+[t=  311] P4.T2  R 0xAA54  page 170 (outer 10, inner 10) off 0x54 | TLB MISS | PAGE FAULT -> frame 6 (evicted P3 page 138, dirty -> write-back) | PA 0x0654
+[t=  312] P4.T2  R 0xA965  page 169 (outer 10, inner 9) off 0x65 | TLB MISS | PAGE FAULT -> frame 11 (evicted P3 page 72, dirty -> write-back) | PA 0x0B65
+[t=  313] P4.T2  R 0xA93C  page 169 (outer 10, inner 9) off 0x3C | TLB HIT  | PA 0x0B3C
+[t=  314] P4.T2  W 0xAE7D  page 174 (outer 10, inner 14) off 0x7D | TLB MISS | PAGE FAULT -> frame 8 (evicted P3 page 139, clean) | PA 0x087D
+[t=  315] P4.T2  R 0xAA35  page 170 (outer 10, inner 10) off 0x35 | TLB HIT  | PA 0x0635
+[t=  316] FINISH   P4.T2  turnaround=316 wait=304
+[t=  316] IDLE     all threads finished
+
+#################### FCFS ####################
+  CPU
+    cycles executed  : 316
+    context switches : 3  (between processes)
+    thread switches  : 4  (between threads of one process)
+    cycles per thread:  P1.T1=40  P1.T2=24  P2.T1=64  P2.T2=16  P3.T1=32  P3.T2=48  P4.T1=80  P4.T2=12
+  Memory accesses          : 316
+  Page faults              : 60  (18.99 %)
+  Disk write-backs         : 33
+  Effective access cost    : 30.81 cycles/access  (TLB 1, walk +2, fault +100, write-back +100)
+  TLB (8 entries, LRU)
+    lookups        : 316
+    hits / misses  : 256 / 60
+    hit rate       : 81.01 %
+    LRU evictions  : 48
+    invalidations  : 4  (entries removed when their page was evicted)
+    flushes        : 0
+  Two-level page table (4 outer bits + 4 inner bits, 256 pages per process)
+    page-table walks       : 60
+    page faults            : 60
+    pages loaded / evicted : 60 / 44
+    resident pages now     : 16
+    second-level tables    : 8  (128 inner entries allocated vs 1024 for flat tables)
+  Advanced Clock (16 frames)
+    loads into free frames : 16
+    evictions              : 44
+      clean (R=0,M=0)      : 11
+      dirty (write-back)   : 33
+    clock hand moves       : 713
+  Frame table (hand at 9)
+    frame  0 : P4 page  90  R=1 M=1
+    frame  1 : P4 page  95  R=1 M=0
+    frame  2 : P4 page 171  R=1 M=0
+    frame  3 : P4 page 162  R=1 M=1
+    frame  4 : P4 page 161  R=1 M=0
+    frame  5 : P4 page 168  R=1 M=1
+    frame  6 : P4 page 170  R=1 M=0
+    frame  7 : P4 page  81  R=0 M=1
+    frame  8 : P4 page 174  R=1 M=1
+    frame  9 : P3 page 140  R=0 M=1   <- hand
+    frame 10 : P4 page  80  R=0 M=1
+    frame 11 : P4 page 169  R=1 M=0
+    frame 12 : P3 page  74  R=0 M=1
+    frame 13 : P4 page  82  R=1 M=1
+    frame 14 : P4 page  89  R=1 M=1
+    frame 15 : P4 page  88  R=1 M=1
+  Per-thread results (FCFS)
+    Thread    Prio  Burst  Response  Wait  Turnaround  Dispatches  TLB hit%  Faults
+    --------  ----  -----  --------  ----  ----------  ----------  --------  ------
+    P1.T1        2     40         0     0          40           1      82.5       7
+    P1.T2        3     24        40    40          64           1      75.0       6
+    P2.T1        1     64        64    64         128           1      87.5       8
+    P2.T2        1     16       128   128         144           1      56.2       7
+    P3.T1        3     32       144   144         176           1      75.0       8
+    P3.T2        3     48       176   176         224           1      79.2      10
+    P4.T1        2     80       224   224         304           1      91.2       7
+    P4.T2        1     12       304   304         316           1      41.7       7
+
+  ASCII timeline - FCFS  (ticks 0-315 of 316)
+  Legend: '=' TLB hit   'm' TLB miss (page table hit)   'F' page fault   'W' page fault + dirty write-back
+          '.' ready/waiting   'C' context switch   't' thread switch
+
+  tick     0         10        20        30        40        50        60        70        80        90        
+           |---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+  P1.T1    F=F=F=F=============FF=F================                                                            
+  P1.T2    ........................................F==F=F====F=F===F=======                                    
+  P2.T1    ................................................................FFF==F==========F=================W=
+  P2.T2    ....................................................................................................
+  P3.T1    ....................................................................................................
+  P3.T2    ....................................................................................................
+  P4.T1    ....................................................................................................
+  P4.T2    ....................................................................................................
+  Switch                                           t                       C                                   
+
+  tick     100       110       120       130       140       150       160       170       180       190       
+           |---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+  P1.T1                                                                                                        
+  P1.T2                                                                                                        
+  P2.T1    ===W======================W=                                                                        
+  P2.T2    ............................W=WW====W=W===WW                                                        
+  P3.T1    ............................................WWF=============FF====WW=======W                        
+  P3.T2    ............................................................................F=F===W==============W=F
+  P4.T1    ....................................................................................................
+  P4.T2    ....................................................................................................
+  Switch                               t               C                               t                       
+
+  tick     200       210       220       230       240       250       260       270       280       290       
+           |---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+  P1.T1                                                                                                        
+  P1.T2                                                                                                        
+  P2.T1                                                                                                        
+  P2.T2                                                                                                        
+  P3.T1                                                                                                        
+  P3.T2    W=F=W======W=======W====                                                                            
+  P4.T1    ........................W==W==W===========================F=======W=============W===================
+  P4.T2    ....................................................................................................
+  Switch                           C                                                                           
+
+  tick     300       310   
+           |---------|-----
+  P1.T1                    
+  P1.T2                    
+  P2.T1                    
+  P2.T2                    
+  P3.T1                    
+  P3.T2                    
+  P4.T1    ===W            
+  P4.T2    ....WWW===WWW=F=
+  Switch       t           

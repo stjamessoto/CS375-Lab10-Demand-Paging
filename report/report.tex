@@ -1,0 +1,409 @@
+% =====================================================================
+%  CS375 Lab 10 - Demand Paging, Advanced Clock, TLB and MLFQ
+%
+%  HOW TO USE
+%   1. Fill in your name / date below (\studentname ...).
+%   2. Save each screenshot into report/screenshots/ using the exact file
+%      name shown in its placeholder box (e.g. 01_build.png). PNG or JPG.
+%   3. Graphs and summary tables are pulled in automatically from
+%      ../output/ after you run:  make experiments && make plots
+%   4. Build:  make report      (or:  cd report && pdflatex report.tex  twice)
+%  Anything that is missing shows up as a labelled box, so the report always
+%  compiles.
+% =====================================================================
+\documentclass[11pt]{article}
+
+\newcommand{\studentname}{Santiago Soto}
+\newcommand{\studentid}{M00121124}
+\newcommand{\coursename}{CS375 -- Operating Systems}
+\newcommand{\labdate}{\today}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\setlength{\headheight}{14pt}
+
+\definecolor{codebg}{HTML}{F5F5F3}
+\lstset{basicstyle=\ttfamily\small, backgroundcolor=\color{codebg}, frame=single,
+        rulecolor=\color{gray!40}, breaklines=true, columns=fullflexible}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\coursename\ -- Lab 10}
+\rhead{\studentname}
+\cfoot{\thepage}
+
+% ---------------------------------------------------------------------
+% \screenshot{file-name-without-extension}{caption}{what to capture}
+% Looks for screenshots/<name>.png, then .jpg; otherwise draws a placeholder.
+% ---------------------------------------------------------------------
+\newcommand{\shotbox}[2]{%
+  \fbox{\parbox{0.92\linewidth}{\centering\vspace{1.2em}
+    {\large\textbf{Screenshot placeholder}}\\[0.4em]
+    Save as \texttt{report/screenshots/\detokenize{#1}.png}\\[0.4em]
+    \small #2\vspace{1.2em}}}}
+\newcommand{\screenshot}[3]{%
+  \begin{figure}[H]\centering
+  \IfFileExists{screenshots/#1.png}{%
+    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{screenshots/#1.png}}{%
+  \IfFileExists{screenshots/#1.jpg}{%
+    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{screenshots/#1.jpg}}{%
+    \shotbox{#1}{#3}}}
+  \caption{#2}\label{fig:#1}
+  \end{figure}}
+
+% \graph{file in ../output/graphs}{caption}{width}
+\newcommand{\graph}[3]{%
+  \begin{figure}[H]\centering
+  \IfFileExists{../output/graphs/#1}{%
+    \includegraphics[width=#3\linewidth]{../output/graphs/#1}}{%
+    \fbox{\parbox{0.9\linewidth}{\centering\vspace{1em}Graph \texttt{output/graphs/\detokenize{#1}} not found.\\
+      Run \texttt{make experiments} and \texttt{make plots}.\vspace{1em}}}}
+  \caption{#2}
+  \end{figure}}
+
+% \autotable{file in ../output/summary}
+\newcommand{\autotable}[1]{%
+  \IfFileExists{../output/summary/#1}{\input{../output/summary/#1}}{%
+    \fbox{Table \texttt{output/summary/\detokenize{#1}} not found -- run \texttt{make experiments}.}}}
+
+\title{\textbf{Lab 10: Simulating a Virtual Memory and CPU Subsystem\\
+with Demand Paging and Advanced Clock Replacement}}
+\author{\studentname\ (\studentid)\\\coursename}
+\date{\labdate}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+This lab builds a C++ simulator of a demand-paged virtual memory system working together with a
+CPU scheduler. Every memory reference in a trace goes through a configurable LRU TLB, a two-level
+page table and an enhanced Clock replacement policy that uses reference and modified bits. A
+thread-level scheduler runs the trace under FCFS, Round Robin, Priority and a three-queue MLFQ with
+aging. The simulator logs every access, generates text and \texttt{matplotlib} timeline graphs, and
+reports the TLB hit rate, page-fault rate, context and thread switches, and a fairness index. The
+experiments show that the scheduling policy changes memory performance as much as the hardware
+parameters do. Policies that interleave many threads destroy TLB and frame locality, and a TLB
+larger than the set of resident frames brings no further benefit.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Building and Running}
+% =====================================================================
+The project builds with a single \texttt{make}. The simulator binary is \texttt{bin/vmsim}. With no
+arguments it runs all four scheduling policies on \texttt{input/trace.txt}.
+
+\begin{lstlisting}
+make                      # build bin/vmsim from src/
+./bin/vmsim               # all four policies, TLB = 8, 16 frames
+./bin/vmsim --policy mlfq --tlb 4 --verbose   # one policy, full log on screen
+./bin/vmsim --config config/sim.conf          # settings from a config file
+make experiments          # every pattern / policy / TLB size / frame count
+make plots                # PNG timelines + comparison graphs
+\end{lstlisting}
+
+\screenshot{01_build}{Building the simulator with \texttt{make}.}
+  {Run \texttt{make clean \&\& make} and capture the compile lines and the final link of \texttt{bin/vmsim}.}
+
+\screenshot{02_help}{Command-line options. The TLB size, frame count, page size and policy are all configurable.}
+  {Run \texttt{./bin/vmsim --help} and capture the whole usage text.}
+
+% =====================================================================
+\section{Design and Implementation}
+% =====================================================================
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+File & Responsibility \\
+\midrule
+\texttt{main.cpp} & driver: parses options, runs each policy, writes logs, CSVs and the summary \\
+\texttt{Process.h/cpp} & process with threads; per-thread access streams, bursts and priorities \\
+\texttt{CPU.h/cpp} & executes one cycle; counts context vs.\ thread switches \\
+\texttt{Scheduler.h/cpp} & FCFS, RR (q=4), Priority, MLFQ (3 queues, aging) \\
+\texttt{TLB.h/cpp} & configurable-size TLB with LRU eviction and invalidation \\
+\texttt{TwoLevelPageTable.h/cpp} & outer/inner page tables, on-demand second-level tables \\
+\texttt{Clock.h/cpp} & enhanced second-chance Clock with R and M bits \\
+\texttt{MMU.h/cpp} & translation path TLB $\rightarrow$ page walk $\rightarrow$ page fault \\
+\texttt{TraceLoader}, \texttt{Config}, \texttt{Logger}, \texttt{Report} & trace parsing, options, log file, tables and timelines \\
+\bottomrule
+\end{tabularx}
+\caption{Source files (all in \texttt{src/}).}
+\end{table}
+
+\subsection{Two-level page table and page-fault handling}
+Virtual addresses are 16 bits with 256-byte pages, so every process has 256 virtual pages. The
+virtual page number is split evenly into an outer and an inner index:
+
+\begin{table}[H]\centering
+\begin{tabular}{cccl}
+\toprule
+bits 15--12 & bits 11--8 & bits 7--0 & example \texttt{0x1A43} \\
+\midrule
+outer index (4) & inner index (4) & offset (8) & page 26 = outer 1, inner 10, offset \texttt{0x43}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\texttt{firstLevel} maps \texttt{(pid, outer)} to the id of a second-level table, and
+\texttt{secondLevel} maps \texttt{(table id, inner)} to a frame number, where $-1$ means not
+present. Second-level tables are allocated only when the first page in their range faults in. In
+the FCFS run of \texttt{trace.txt}, 24 second-level tables (384 entries) were allocated, compared
+with 1024 entries for four flat page tables. That is the space saving that hierarchical paging is
+designed for.
+
+Every access follows the same path in \texttt{MMU::access()}:
+(1) TLB lookup;
+(2) on a miss, walk both levels;
+(3) if the page is not present, a page fault occurs. Clock selects a frame. If the victim is dirty
+it is written back, and the victim's page-table entry and TLB entry are both invalidated. Then both
+levels are updated for the new page and the TLB is refilled. Invalidating the TLB entry on
+eviction matters: without it, a TLB hit could return a frame that now belongs to another page.
+
+\screenshot{04_page_table}{Per-access log: each address is split into outer/inner/offset, and the log shows TLB misses, page-table hits and page faults. Below it are the page-table statistics.}
+  {Run the two \texttt{grep} commands for screenshot 04 (page-fault log lines + ``Two-level page table'' stats).}
+
+\subsection{Configurable TLB with LRU}
+The TLB size is set with \texttt{--tlb N} or with \texttt{tlb\_size} in \texttt{config/sim.conf}.
+Setting it to 0 disables the TLB. Each entry is tagged with the PID and stores a \texttt{lastUsed}
+timestamp. A hit refreshes the timestamp, and an insert into a full TLB replaces the entry with the
+smallest timestamp, which is true LRU. With \texttt{--tlb-flush} the TLB is flushed on every
+context switch, which models an untagged TLB.
+
+\screenshot{05_tlb}{The same trace with a 2-entry TLB and with a 16-entry TLB. Only the TLB hit rate changes; the page-fault rate stays the same.}
+  {Run the two TLB commands for screenshot 05 (\texttt{--tlb 2} and \texttt{--tlb 16}) and capture both summary tables.}
+
+\subsection{Advanced Clock with modified bits}
+Each frame keeps a reference bit R and a modified bit M. Loading a page sets R=1, and M=1 if the
+first access is a write. Every hit sets R, and a write also sets M. When memory is full, the hand
+searches as follows:
+\begin{enumerate}
+\item \textbf{Pass A} -- one full sweep for a frame with (R=0, M=0) without changing any bits.
+\item \textbf{Pass B} -- one full sweep for (R=0, M=1), clearing R on every frame it passes.
+\item Repeat. After pass B every R bit is 0, so the next round always finds a victim.
+\end{enumerate}
+Clean, unreferenced pages are therefore evicted first, and a dirty page is written back only when
+no clean candidate exists. The trace \texttt{input/clock\_demo.txt} demonstrates this with 3 frames.
+When page 3 arrives, the hand reaches dirty page 0 first, but clean page 1 is evicted instead. In
+the full \texttt{trace.txt} FCFS run, 47 of the 99 evictions were clean and needed no disk write.
+
+\screenshot{06_clock}{Clock demo: clean pages are evicted before dirty ones. The final frame table shows the R and M bits.}
+  {Run the clock demo command for screenshot 06 and capture the log lines, the Clock statistics and the frame table.}
+
+\subsection{Thread simulation and scheduling (FCFS, RR, Priority, MLFQ)}
+Each trace line carries a PID and a thread ID. A \texttt{Process} keeps a separate access stream,
+CPU burst (number of accesses) and priority for each thread, so the schedulable unit is a thread
+\texttt{(pid, tid)}. One tick is one CPU cycle, and each cycle performs one memory access. The CPU
+distinguishes two kinds of switch:
+\begin{itemize}
+\item \textbf{context switch} -- the next thread belongs to a \emph{different process}, so the
+      address space changes;
+\item \textbf{thread switch} -- the next thread belongs to the \emph{same process}, so the address
+      space and the TLB contents stay valid.
+\end{itemize}
+\textbf{FCFS} runs threads to completion in arrival order. \textbf{RR} uses a quantum of 4.
+\textbf{Priority} always runs the ready thread with the lowest priority number and shares the CPU
+round robin among equal priorities. Process and thread priorities come from \texttt{PRIORITY} and
+\texttt{THREAD} lines in the trace. \textbf{MLFQ} has three queues with quanta 4, 8 and 16. Every
+thread starts in Q0 and is demoted one level each time it uses its whole quantum. A thread that has
+waited 30 ticks in Q1 or Q2 is promoted one level (aging), which prevents starvation.
+
+\screenshot{07_mlfq}{MLFQ log: demotions after a full quantum, promotions by aging, and the per-thread table with demotion and promotion counts.}
+  {Run the two MLFQ commands for screenshot 07.}
+
+\screenshot{08_threads}{Thread-level scheduling under RR: thread switches (same address space) and context switches (new process), plus per-thread burst, wait and turnaround times.}
+  {Run the two thread commands for screenshot 08.}
+
+% =====================================================================
+\section{Modified Trace and Access Patterns}
+% =====================================================================
+\texttt{scripts/gen\_traces.py} uses a fixed seed, so every result in this report can be reproduced
+exactly. The modified \texttt{input/trace.txt} keeps the 7 original sample lines and adds four
+sections: P1 \emph{sequential} (a strided array walk, 8 accesses per page), P2 \emph{random}
+(uniform over 64\,KiB), P3 \emph{localized} (90\% of accesses in a 3-page hot set that moves
+halfway through), and P4 \emph{mixed} (one localized thread and one sequential thread). The three
+pattern traces \texttt{trace\_sequential/random/localized.txt} use the \emph{same} 8 threads, burst
+lengths and priorities, so the access pattern is the only variable. About 30\% of all accesses are
+writes.
+
+\screenshot{03_trace}{The modified \texttt{input/trace.txt}: header, priorities, the original sample and the start of the sequential section.}
+  {Run \texttt{head -n 45 input/trace.txt}.}
+
+% =====================================================================
+\section{Results}
+% =====================================================================
+Default configuration: TLB = 8 entries (LRU, tagged), 16 frames, 256-byte pages, quantum 4, aging
+30. All 323 accesses of \texttt{trace.txt} take 323 ticks under every policy because there is no
+idle time, so the policies differ only in \emph{order}. Even so, the order changes memory
+performance considerably.
+
+\subsection{Summary table of performance metrics}
+\begin{table}[H]\centering\small
+\autotable{trace_table.tex}
+\caption{\texttt{input/trace.txt} (mixed patterns), generated automatically by the simulator. Fairness is Jain's index of $\textit{burst}/\textit{turnaround}$ over all threads (1 = perfectly fair).}
+\end{table}
+
+\begin{table}[H]\centering\small
+\textbf{Sequential}\par\smallskip
+\autotable{trace_sequential_table.tex}\par\bigskip
+\textbf{Random}\par\smallskip
+\autotable{trace_random_table.tex}\par\bigskip
+\textbf{Localized}\par\smallskip
+\autotable{trace_localized_table.tex}
+\caption{The same 8 threads with a single access pattern each.}
+\end{table}
+
+\screenshot{10_summary}{Terminal output of the performance summary for \texttt{trace.txt}.}
+  {Run \texttt{./bin/vmsim --quiet} and capture the summary table.}
+
+\subsection{Timeline graphs}
+Each tick is coloured by the outcome of that access. Grey bars show the time a thread spends ready
+but waiting, solid vertical lines mark context switches and dotted lines mark thread switches.
+
+\graph{timeline_trace_fcfs.png}{FCFS timeline: long uninterrupted bursts, so pages are faulted in once and then hit in the TLB.}{1.0}
+\graph{timeline_trace_rr.png}{Round Robin timeline: a context switch every 4 ticks, with TLB misses and faults at the start of almost every quantum.}{1.0}
+\graph{timeline_trace_priority.png}{Priority timeline: the priority-1 threads finish first and the priority-3 threads (P3, P1.T2) wait until the end.}{1.0}
+\graph{timeline_trace_mlfq.png}{MLFQ timeline: quanta grow from 4 to 16 as threads are demoted, and aging promotions keep the waiting threads moving.}{1.0}
+
+\screenshot{09_ascii_timeline}{The text-based (ASCII) timeline printed by the simulator: one row per thread, plus a row for context and thread switches.}
+  {Run the ASCII timeline command for screenshot 09.}
+
+\subsection{Access patterns, TLB size and frame count}
+\graph{policy_comparison.png}{Policy comparison on \texttt{trace.txt}.}{0.95}
+\graph{pattern_comparison.png}{TLB hit rate and page-fault rate for each access pattern and policy.}{0.95}
+\graph{tlb_sweep.png}{TLB hit rate as the TLB grows from 1 to 32 entries (16 frames).}{1.0}
+\graph{frames_sweep.png}{Page-fault rate as the number of physical frames grows (\texttt{trace.txt}).}{0.65}
+
+\screenshot{11_patterns}{\texttt{make experiments}: summary tables for the sequential, random and localized traces.}
+  {Run \texttt{make experiments} and capture the first summary tables it prints.}
+
+% =====================================================================
+\section{Analysis}
+% =====================================================================
+\subsection{Scheduling policy vs.\ memory performance}
+\paragraph{TLB hit rate.} FCFS has the best TLB hit rate on the mixed trace (63.8\%), and RR has the
+worst (39.0\%). Priority (62.2\%) is close to FCFS, and MLFQ falls in between (46.4\%). The
+explanation is the \emph{reuse distance} between two accesses to the same page. Under FCFS a thread
+uses its pages in one uninterrupted burst, so its working set stays in the TLB. Under RR, all eight
+threads take turns every 4 ticks. By the time a thread runs again, seven other threads have each
+inserted one to three translations, and an 8-entry LRU TLB has evicted most of its entries. The
+RR timeline shows a miss or a fault at the start of almost every quantum. Priority behaves like
+FCFS because, within each priority level, only two or three threads compete. MLFQ starts as RR
+(quantum 4), but demoted threads get quanta of 8 and 16 and reuse their pages for longer.
+
+\paragraph{Page-fault rate.} The same effect appears one level lower. With 16 frames, FCFS and
+Priority fault on about 35\% of accesses, while RR and MLFQ fault on about 48\%. Interleaving all
+eight threads means their combined working sets (about 24 hot pages for the localized threads
+alone) compete for 16 frames at the same time, so Clock evicts pages that will be needed again a
+few quanta later. Faults also cause disk writes: RR needed 60 dirty write-backs and FCFS needed 52.
+The frame sweep shows that the RR/MLFQ disadvantage shrinks as memory grows, from 64.7\% vs.\ 37.8\%
+faults with 4 frames to 38.7\% vs.\ 34.7\% with 32. With enough memory, ordering matters much less,
+because what remains are compulsory faults.
+
+\paragraph{Context-switch overhead.} FCFS performs only 5 context switches and 2 thread switches.
+RR performs 67 context switches, more than 13 times as many, with one at almost every quantum
+boundary. Priority (42) and MLFQ (41) are in between. MLFQ saves switches through its longer
+lower-level quanta, and Priority saves them because only a few threads share a level. The
+difference between a \emph{thread} switch and a \emph{context} switch matters here. A thread switch
+keeps the address space, so a tagged TLB and resident pages stay useful. A context switch changes
+it. The tagged-versus-flushed experiment measures the cost directly: flushing the TLB on each
+context switch leaves FCFS unchanged (63.8\%, only 5 switches), but lowers RR from 39.0\% to 34.7\%
+and Priority from 62.2\% to 44.0\%. PID-tagged TLBs exist precisely to avoid this cost.
+
+\paragraph{Thread scheduling fairness.} The fairness ranking is the reverse of the memory ranking.
+Jain's index is 0.576 for FCFS, 0.715 for Priority, and 0.943 and 0.947 for RR and MLFQ. Under FCFS,
+P4.T2 has a burst of only 12 ticks but finishes at tick 323 after waiting 311 ticks, because it
+arrived last. RR and MLFQ give every thread a first response within 28 ticks (average response
+time 14.0 versus 141.2 for FCFS). Priority starves the priority-3 threads: P3.T1 and P3.T2 wait 273
+and 274 ticks and do not get the CPU until ticks 220 and 224. MLFQ combines a fast response for
+everyone with fewer switches than RR. Its 39 demotions and 29 aging promotions keep long CPU-bound
+threads such as P4.T1 (burst 80) from monopolising the CPU without starving anyone. The aging
+threshold is a real trade-off. At 15 ticks, MLFQ makes 57 context switches and behaves almost like
+RR. At 60 ticks or more it makes only 26 switches and its TLB hit rate rises to 51.7--53.6\%, at a
+small cost in fairness (0.932--0.938).
+
+\paragraph{Overall.} No single policy wins on every metric. FCFS and Priority give the best TLB and
+page-fault rates, at a severe cost in response time and fairness. RR is the fairest but is the
+worst for the memory system. MLFQ is the best compromise: its fairness is as high as RR's, it makes
+39\% fewer context switches, and it has a better TLB hit rate. These measurements reproduce the
+classic tension between locality and interactivity.
+
+\subsection{Impact of memory access patterns}
+The access pattern matters more than the scheduler. With identical threads and the default
+configuration:
+\begin{itemize}
+\item \textbf{Sequential} access gives a TLB hit rate of 87.3\% and 12.7\% faults under FCFS, RR and
+      Priority. Each 256-byte page is touched 8 times (stride 32), so 7 of every 8 accesses hit and
+      only the first access to each new page faults. These are compulsory faults that no
+      replacement policy can avoid. Because each thread uses only one page at a time, eight threads
+      need only eight translations, which fit exactly in the 8-entry TLB, so even RR loses nothing.
+      MLFQ is slightly lower (82.0\%) because its 16-tick quanta cross two pages per turn and push
+      out other threads' entries.
+\item \textbf{Random} access defeats both caches: 95--98\% of accesses fault and the TLB hit rate is
+      below 3\%. With 256 possible pages per process and 16 frames, almost no page is resident when
+      it is touched again. No policy and no reasonable TLB size helps; only a much larger memory
+      would.
+\item \textbf{Localized} access is the most sensitive to scheduling. Under FCFS it is almost as good
+      as sequential (81.0\% hits, 19.0\% faults), because each thread's 3-page hot set fits easily.
+      Under RR the hit rate falls to 45.9\% and faults double to 37.7\%, because eight hot sets of
+      3 pages (24 pages) do not fit in 16 frames or 8 TLB entries at the same time. Locality only
+      pays off if the scheduler lets a thread run long enough to use it.
+\end{itemize}
+
+\subsection{Impact of TLB size}
+The TLB-sweep graph shows three regimes:
+\begin{enumerate}
+\item \textbf{TLB smaller than the working set}: each doubling helps a lot. For localized/FCFS the
+      hit rate goes 29.4\% $\rightarrow$ 55.7\% $\rightarrow$ 80.4\% at 1, 2 and 4 entries, because
+      a 3-page hot set needs about 4 entries.
+\item \textbf{TLB covers the working set}: the curve flattens. For FCFS, going from 4 to 32 entries
+      gains less than 2 percentage points.
+\item \textbf{TLB larger than physical memory}: no gain at all. Every curve is identical at 16 and
+      32 entries, because a TLB can only map pages that are resident, and there are only 16 frames.
+      Every miss beyond that point is a page fault. TLB hit rate + page-fault rate $\le 100\%$, so
+      RR on localized access can never exceed $100 - 37.7 = 62.3\%$, and it reaches exactly 62.3\%.
+\end{enumerate}
+Interleaving policies need a larger TLB to reach the same hit rate. RR and MLFQ on the mixed trace
+keep improving up to 16 entries (39.0\% $\rightarrow$ 51.7\%), while FCFS saturates at 4 entries.
+Random access never exceeds 5.1\% at any size.
+
+\subsection{Conclusion}
+The simulator demonstrates demand paging with a two-level table, an LRU TLB and an enhanced Clock
+that avoids disk writes by preferring clean victims. Memory performance is a property of the whole
+system, not only of the MMU. The scheduling policy determines how much of each thread's locality
+survives. Long, uninterrupted bursts (FCFS, Priority, or MLFQ's lower queues) preserve TLB and frame
+contents. Frequent switching among many threads (RR) increases misses, faults and write-backs. A
+well-tuned MLFQ with aging gets most of RR's fairness at a much lower memory cost.
+
+\appendix
+\section{Generated Files}
+\screenshot{12_plotter}{\texttt{python3 scripts/plotter.py}: the ASCII graphs and the list of generated PNG files.}
+  {Run \texttt{make plots | tail -n 24} and capture the pattern bars and the ``PNG graphs:'' list.}
+\screenshot{13_log_files}{Auto-generated log files and the start of a log.}
+  {Run \texttt{ls -lh output/logs} and \texttt{head -n 30 output/logs/trace\_mlfq.log}.}
+
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Path & Contents \\
+\midrule
+\texttt{output/logs/<trace>\_<policy>.log} & full per-tick log, statistics, frame table, ASCII timeline \\
+\texttt{output/events/<trace>\_<policy>.csv} & one row per tick (input to \texttt{plotter.py}) \\
+\texttt{output/summary/<trace>.csv} & summary metrics, one row per policy \\
+\texttt{output/summary/*\_sweep.csv} & TLB-size and frame-count sweeps, tagged vs.\ flushed TLB \\
+\texttt{output/graphs/*.png} & timeline and comparison graphs (plus \texttt{ascii\_graphs.txt}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\end{document}

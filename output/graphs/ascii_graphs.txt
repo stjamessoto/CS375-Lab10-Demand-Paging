@@ -1,0 +1,123 @@
+CS375 Lab 10 - ASCII graphs (text version of the PNG graphs)
+
+FCFS timeline (323 ticks, 1 column = 6 ticks): 'F' fault in bucket, 'm' TLB miss, '=' only hits, ' ' not running
+----------------------------------------------------------------------
+  P1.T1    |FF=FFF=                                               |
+  P1.T2    |       FFF==                                          |
+  P2.T1    |           FFFFFFFFFFF                                |
+  P2.T2    |                           FFFF                       |
+  P3.T1    |                      FFFFF=                          |
+  P3.T2    |                              FF==FF===               |
+  P4.T1    |                                      FF=FF==FF=====  |
+  P4.T2    |                                                   F=F|
+  Switch   |       t   C          C    C  C       C            t  |
+
+RR timeline (323 ticks, 1 column = 6 ticks): 'F' fault in bucket, 'm' TLB miss, '=' only hits, ' ' not running
+----------------------------------------------------------------------
+  P1.T1    |F    m    mF    F   FF  F=  mF  F  mF m= m            |
+  P1.T2    |F=    m    F    F=   F   F=  m                        |
+  P2.T1    | F    FF    F    F    F   F  FF  F  F  F FFFFFFFFFFF  |
+  P2.T2    |  FF    F    F    FF   F                              |
+  P3.T1    |  F    F    mF    F   FF  FF  F  F=  m                |
+  P3.T2    |   F    F=    F    F   F=  mF  F  F  F mm m m =       |
+  P4.T1    |    F    F    mF    F   F   F  mF  m FF mmFFFFm==F====|
+  P4.T2    |    F=    F    F                                      |
+  Switch   |tCCCCCCCCCCtCCCtCCCCCtCCCtCtCCCCCCtCCCCCCCCCCCCCCCCC  |
+
+Priority timeline (323 ticks, 1 column = 6 ticks): 'F' fault in bucket, 'm' TLB miss, '=' only hits, ' ' not running
+----------------------------------------------------------------------
+  P1.T1    |               FF=F==F==F=F===                        |
+  P1.T2    |                                    F = F = F = =     |
+  P2.T1    |F F F FFFFFFFFFF                                      |
+  P2.T2    |FFFFFFFFF                                             |
+  P3.T1    |                                    FFF==F=mFFm=Fm=   |
+  P3.T2    |                                     F F m m = ==FF===|
+  P4.T1    |                FF====FF=====FF=====                  |
+  P4.T2    | F m F                                                |
+  Switch   |tCCCCCCtt      CCCCCCCCCCCCCCC      CtCtCtCtCtCtCttt  |
+
+MLFQ timeline (323 ticks, 1 column = 6 ticks): 'F' fault in bucket, 'm' TLB miss, '=' only hits, ' ' not running
+----------------------------------------------------------------------
+  P1.T1    |F    mF          F     F==F     FF     F=             |
+  P1.T2    |F=    m=   F=         FF==                            |
+  P2.T1    | F     F    FF          F   FF    FFFF  FFFF  F       |
+  P2.T2    |  FF    FF    FF   FF                                 |
+  P3.T1    |  F     F     F   FF       FF    F=                   |
+  P3.T2    |   F     F     F    F=       mF      F=    FF  F      |
+  P4.T1    |    F     F     F    FF        FF     F=    FFFFF=====|
+  P4.T2    |    F=    F=    F=                                    |
+  Switch   |tCCCCCtCCCCCC CCCCCCCCCtCt CCC CCCC  CCCC  CC CC      |
+
+TLB hit rate (%) - trace
+------------------------
+  FCFS                   ######################################## 63.78
+  RR                     ########################                 39.01
+  Priority               #######################################  62.23
+  MLFQ                   #############################            46.44
+
+Page fault rate (%) - trace
+---------------------------
+  FCFS                   #############################            35.60
+  RR                     ######################################## 48.30
+  Priority               #############################            34.98
+  MLFQ                   ######################################## 48.61
+
+Context switches - trace
+------------------------
+  FCFS                   ###                                      5
+  RR                     ######################################## 67
+  Priority               #########################                42
+  MLFQ                   ########################                 41
+
+Thread switches - trace
+-----------------------
+  FCFS                   ####                                     2
+  RR                     ###############################          14
+  Priority               ######################################## 18
+  MLFQ                   ################                         7
+
+Fairness (Jain) - trace
+-----------------------
+  FCFS                   ########################                 0.576
+  RR                     ######################################## 0.943
+  Priority               ##############################           0.715
+  MLFQ                   ######################################## 0.947
+
+TLB hit rate (%) by pattern
+---------------------------
+  trace/FCFS             #############################            63.78
+  trace/RR               ##################                       39.01
+  trace/Priority         #############################            62.23
+  trace/MLFQ             #####################                    46.44
+  sequential/FCFS        ######################################## 87.34
+  sequential/RR          ######################################## 87.34
+  sequential/Priority    ######################################## 87.34
+  sequential/MLFQ        ######################################   81.96
+  random/FCFS            #                                        2.85
+  random/RR              #                                        1.90
+  random/Priority        #                                        2.85
+  random/MLFQ            #                                        1.90
+  localized/FCFS         #####################################    81.01
+  localized/RR           #####################                    45.89
+  localized/Priority     ###################################      75.95
+  localized/MLFQ         #########################                54.75
+
+Page fault rate (%) by pattern
+------------------------------
+  trace/FCFS             ###############                          35.60
+  trace/RR               ####################                     48.30
+  trace/Priority         ##############                           34.98
+  trace/MLFQ             ####################                     48.61
+  sequential/FCFS        #####                                    12.66
+  sequential/RR          #####                                    12.66
+  sequential/Priority    #####                                    12.66
+  sequential/MLFQ        #####                                    12.97
+  random/FCFS            #######################################  94.94
+  random/RR              ######################################## 97.78
+  random/Priority        #######################################  95.57
+  random/MLFQ            ######################################## 97.78
+  localized/FCFS         ########                                 18.99
+  localized/RR           ###############                          37.66
+  localized/Priority     ########                                 19.62
+  localized/MLFQ         ##############                           34.49
+

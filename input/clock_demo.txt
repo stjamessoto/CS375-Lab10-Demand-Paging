@@ -1,0 +1,14 @@
+# Advanced Clock demo - run with 3 frames:
+#   ./bin/vmsim --trace input/clock_demo.txt --frames 3 --policy fcfs --verbose --no-timeline
+# Format: <pid> <thread_id> <address> <access_type> (R=read, W=write)
+1 1 0x0000 W   # page 0 -> frame 0, dirty   (M=1)
+1 1 0x0100 R   # page 1 -> frame 1, clean   (M=0)
+1 1 0x0200 W   # page 2 -> frame 2, dirty   (M=1)
+1 1 0x0300 R   # page 3: memory full. All R=1, so pass B clears R bits; then pass A
+               #         finds the CLEAN page 1 -> evicted with no disk write,
+               #         even though the hand reached dirty page 0 first
+1 1 0x0000 R   # page 0 hit -> R=1 again
+1 1 0x0400 R   # page 4: no (R=0,M=0) frame exists, so the dirty, unreferenced
+               #         page 2 is chosen -> write-back
+1 1 0x0500 R   # page 5: all R cleared again; clean page 3 is preferred over
+               #         dirty page 0, which stays resident

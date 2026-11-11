@@ -1,0 +1,8 @@
+time,pid,tid,address,rw,page,frame,tlb,page_fault,write_back,evicted_pid,evicted_page,switch,mlfq_level
+0,1,1,0x0,W,0,0,miss,1,0,-1,-1,none,0
+1,1,1,0x100,R,1,1,miss,1,0,-1,-1,none,0
+2,1,1,0x200,W,2,2,miss,1,0,-1,-1,none,0
+3,1,1,0x300,R,3,1,miss,1,0,1,1,none,0
+4,1,1,0x0,R,0,0,hit,0,0,-1,-1,none,0
+5,1,1,0x400,R,4,2,miss,1,1,1,2,none,0
+6,1,1,0x500,R,5,1,miss,1,0,1,3,none,0

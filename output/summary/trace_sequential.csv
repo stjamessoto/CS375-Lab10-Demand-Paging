@@ -1,0 +1,5 @@
+tag,policy,tlb_size,frames,page_size,accesses,tlb_hits,tlb_misses,tlb_hit_rate,page_faults,page_fault_rate,write_backs,context_switches,thread_switches,total_ticks,avg_wait,avg_turnaround,avg_response,max_wait,jain_fairness,eff_access_cost
+trace_sequential,FCFS,8,16,256,316,276,40,87.34,40,12.66,23,3,4,316,135.00,174.50,135.00,304,0.580,21.19
+trace_sequential,RR,8,16,256,316,276,40,87.34,40,12.66,23,53,21,316,170.00,209.50,14.00,236,0.953,21.19
+trace_sequential,Priority,8,16,256,316,276,40,87.34,40,12.66,23,38,15,316,140.50,180.00,106.00,268,0.716,21.19
+trace_sequential,MLFQ,8,16,256,316,259,57,81.96,41,12.97,23,33,16,316,172.00,211.50,14.00,240,0.948,21.61

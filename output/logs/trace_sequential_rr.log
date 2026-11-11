@@ -1,0 +1,680 @@
+==============================================================
+ CS375 Lab 10 - Demand Paging + CPU Scheduling Simulator
+==============================================================
+ Trace        : input/trace_sequential.txt  (316 accesses)
+ Address      : 16-bit virtual = 4 outer + 4 inner + 8 offset bits
+ Page size    : 256 bytes  (256 pages per process)
+ Frames       : 16  (advanced Clock, R + M bits)
+ TLB          : 8 entries, LRU, tagged by PID
+ Quantum      : 4  (MLFQ: 4/8/16, aging after 30 ticks)
+ Policies     : fcfs rr priority mlfq
+==============================================================
+Policy: RR
+--------------------------------------------------------------
+[t=    0] ARRIVE   P1.T1  burst=40 priority=2
+[t=    0] ARRIVE   P1.T2  burst=24 priority=3
+[t=    0] ARRIVE   P2.T1  burst=64 priority=1
+[t=    0] ARRIVE   P2.T2  burst=16 priority=1
+[t=    0] ARRIVE   P3.T1  burst=32 priority=3
+[t=    0] ARRIVE   P3.T2  burst=48 priority=3
+[t=    0] ARRIVE   P4.T1  burst=80 priority=2
+[t=    0] ARRIVE   P4.T2  burst=12 priority=1
+[t=    0] DISPATCH P1.T1  (quantum 4)
+[t=    0] P1.T1  R 0x1000  page 16 (outer 1, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 0 (free frame) | PA 0x0000
+[t=    1] P1.T1  R 0x1020  page 16 (outer 1, inner 0) off 0x20 | TLB HIT  | PA 0x0020
+[t=    2] P1.T1  R 0x1040  page 16 (outer 1, inner 0) off 0x40 | TLB HIT  | PA 0x0040
+[t=    3] P1.T1  W 0x1060  page 16 (outer 1, inner 0) off 0x60 | TLB HIT  | PA 0x0060
+[t=    4] PREEMPT  P1.T1  quantum expired
+[t=    4] DISPATCH P1.T2  (quantum 4)
+[t=    4] THREAD SWITCH  -> P1.T2 (same address space)
+[t=    4] P1.T2  R 0x3000  page 48 (outer 3, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 1 (free frame) | PA 0x0100
+[t=    5] P1.T2  R 0x3020  page 48 (outer 3, inner 0) off 0x20 | TLB HIT  | PA 0x0120
+[t=    6] P1.T2  W 0x3040  page 48 (outer 3, inner 0) off 0x40 | TLB HIT  | PA 0x0140
+[t=    7] P1.T2  R 0x3060  page 48 (outer 3, inner 0) off 0x60 | TLB HIT  | PA 0x0160
+[t=    8] PREEMPT  P1.T2  quantum expired
+[t=    8] DISPATCH P2.T1  (quantum 4)
+[t=    8] CONTEXT SWITCH -> P2
+[t=    8] P2.T1  R 0x2000  page 32 (outer 2, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 2 (free frame) | PA 0x0200
+[t=    9] P2.T1  R 0x2020  page 32 (outer 2, inner 0) off 0x20 | TLB HIT  | PA 0x0220
+[t=   10] P2.T1  R 0x2040  page 32 (outer 2, inner 0) off 0x40 | TLB HIT  | PA 0x0240
+[t=   11] P2.T1  R 0x2060  page 32 (outer 2, inner 0) off 0x60 | TLB HIT  | PA 0x0260
+[t=   12] PREEMPT  P2.T1  quantum expired
+[t=   12] DISPATCH P2.T2  (quantum 4)
+[t=   12] THREAD SWITCH  -> P2.T2 (same address space)
+[t=   12] P2.T2  R 0x6000  page 96 (outer 6, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 3 (free frame) | PA 0x0300
+[t=   13] P2.T2  R 0x6020  page 96 (outer 6, inner 0) off 0x20 | TLB HIT  | PA 0x0320
+[t=   14] P2.T2  R 0x6040  page 96 (outer 6, inner 0) off 0x40 | TLB HIT  | PA 0x0340
+[t=   15] P2.T2  R 0x6060  page 96 (outer 6, inner 0) off 0x60 | TLB HIT  | PA 0x0360
+[t=   16] PREEMPT  P2.T2  quantum expired
+[t=   16] DISPATCH P3.T1  (quantum 4)
+[t=   16] CONTEXT SWITCH -> P3
+[t=   16] P3.T1  W 0x4000  page 64 (outer 4, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 4 (free frame) | PA 0x0400
+[t=   17] P3.T1  R 0x4020  page 64 (outer 4, inner 0) off 0x20 | TLB HIT  | PA 0x0420
+[t=   18] P3.T1  R 0x4040  page 64 (outer 4, inner 0) off 0x40 | TLB HIT  | PA 0x0440
+[t=   19] P3.T1  W 0x4060  page 64 (outer 4, inner 0) off 0x60 | TLB HIT  | PA 0x0460
+[t=   20] PREEMPT  P3.T1  quantum expired
+[t=   20] DISPATCH P3.T2  (quantum 4)
+[t=   20] THREAD SWITCH  -> P3.T2 (same address space)
+[t=   20] P3.T2  R 0x8000  page 128 (outer 8, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 5 (free frame) | PA 0x0500
+[t=   21] P3.T2  W 0x8020  page 128 (outer 8, inner 0) off 0x20 | TLB HIT  | PA 0x0520
+[t=   22] P3.T2  R 0x8040  page 128 (outer 8, inner 0) off 0x40 | TLB HIT  | PA 0x0540
+[t=   23] P3.T2  W 0x8060  page 128 (outer 8, inner 0) off 0x60 | TLB HIT  | PA 0x0560
+[t=   24] PREEMPT  P3.T2  quantum expired
+[t=   24] DISPATCH P4.T1  (quantum 4)
+[t=   24] CONTEXT SWITCH -> P4
+[t=   24] P4.T1  W 0x5000  page 80 (outer 5, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 6 (free frame) | PA 0x0600
+[t=   25] P4.T1  R 0x5020  page 80 (outer 5, inner 0) off 0x20 | TLB HIT  | PA 0x0620
+[t=   26] P4.T1  R 0x5040  page 80 (outer 5, inner 0) off 0x40 | TLB HIT  | PA 0x0640
+[t=   27] P4.T1  R 0x5060  page 80 (outer 5, inner 0) off 0x60 | TLB HIT  | PA 0x0660
+[t=   28] PREEMPT  P4.T1  quantum expired
+[t=   28] DISPATCH P4.T2  (quantum 4)
+[t=   28] THREAD SWITCH  -> P4.T2 (same address space)
+[t=   28] P4.T2  W 0xA000  page 160 (outer 10, inner 0) off 0x00 | TLB MISS | PAGE FAULT -> frame 7 (free frame) | PA 0x0700
+[t=   29] P4.T2  R 0xA020  page 160 (outer 10, inner 0) off 0x20 | TLB HIT  | PA 0x0720
+[t=   30] P4.T2  W 0xA040  page 160 (outer 10, inner 0) off 0x40 | TLB HIT  | PA 0x0740
+[t=   31] P4.T2  R 0xA060  page 160 (outer 10, inner 0) off 0x60 | TLB HIT  | PA 0x0760
+[t=   32] PREEMPT  P4.T2  quantum expired
+[t=   32] DISPATCH P1.T1  (quantum 4)
+[t=   32] CONTEXT SWITCH -> P1
+[t=   32] P1.T1  R 0x1080  page 16 (outer 1, inner 0) off 0x80 | TLB HIT  | PA 0x0080
+[t=   33] P1.T1  R 0x10A0  page 16 (outer 1, inner 0) off 0xA0 | TLB HIT  | PA 0x00A0
+[t=   34] P1.T1  W 0x10C0  page 16 (outer 1, inner 0) off 0xC0 | TLB HIT  | PA 0x00C0
+[t=   35] P1.T1  W 0x10E0  page 16 (outer 1, inner 0) off 0xE0 | TLB HIT  | PA 0x00E0
+[t=   36] PREEMPT  P1.T1  quantum expired
+[t=   36] DISPATCH P1.T2  (quantum 4)
+[t=   36] THREAD SWITCH  -> P1.T2 (same address space)
+[t=   36] P1.T2  R 0x3080  page 48 (outer 3, inner 0) off 0x80 | TLB HIT  | PA 0x0180
+[t=   37] P1.T2  R 0x30A0  page 48 (outer 3, inner 0) off 0xA0 | TLB HIT  | PA 0x01A0
+[t=   38] P1.T2  W 0x30C0  page 48 (outer 3, inner 0) off 0xC0 | TLB HIT  | PA 0x01C0
+[t=   39] P1.T2  W 0x30E0  page 48 (outer 3, inner 0) off 0xE0 | TLB HIT  | PA 0x01E0
+[t=   40] PREEMPT  P1.T2  quantum expired
+[t=   40] DISPATCH P2.T1  (quantum 4)
+[t=   40] CONTEXT SWITCH -> P2
+[t=   40] P2.T1  R 0x2080  page 32 (outer 2, inner 0) off 0x80 | TLB HIT  | PA 0x0280
+[t=   41] P2.T1  R 0x20A0  page 32 (outer 2, inner 0) off 0xA0 | TLB HIT  | PA 0x02A0
+[t=   42] P2.T1  R 0x20C0  page 32 (outer 2, inner 0) off 0xC0 | TLB HIT  | PA 0x02C0
+[t=   43] P2.T1  R 0x20E0  page 32 (outer 2, inner 0) off 0xE0 | TLB HIT  | PA 0x02E0
+[t=   44] PREEMPT  P2.T1  quantum expired
+[t=   44] DISPATCH P2.T2  (quantum 4)
+[t=   44] THREAD SWITCH  -> P2.T2 (same address space)
+[t=   44] P2.T2  R 0x6080  page 96 (outer 6, inner 0) off 0x80 | TLB HIT  | PA 0x0380
+[t=   45] P2.T2  W 0x60A0  page 96 (outer 6, inner 0) off 0xA0 | TLB HIT  | PA 0x03A0
+[t=   46] P2.T2  W 0x60C0  page 96 (outer 6, inner 0) off 0xC0 | TLB HIT  | PA 0x03C0
+[t=   47] P2.T2  R 0x60E0  page 96 (outer 6, inner 0) off 0xE0 | TLB HIT  | PA 0x03E0
+[t=   48] PREEMPT  P2.T2  quantum expired
+[t=   48] DISPATCH P3.T1  (quantum 4)
+[t=   48] CONTEXT SWITCH -> P3
+[t=   48] P3.T1  W 0x4080  page 64 (outer 4, inner 0) off 0x80 | TLB HIT  | PA 0x0480
+[t=   49] P3.T1  W 0x40A0  page 64 (outer 4, inner 0) off 0xA0 | TLB HIT  | PA 0x04A0
+[t=   50] P3.T1  W 0x40C0  page 64 (outer 4, inner 0) off 0xC0 | TLB HIT  | PA 0x04C0
+[t=   51] P3.T1  W 0x40E0  page 64 (outer 4, inner 0) off 0xE0 | TLB HIT  | PA 0x04E0
+[t=   52] PREEMPT  P3.T1  quantum expired
+[t=   52] DISPATCH P3.T2  (quantum 4)
+[t=   52] THREAD SWITCH  -> P3.T2 (same address space)
+[t=   52] P3.T2  R 0x8080  page 128 (outer 8, inner 0) off 0x80 | TLB HIT  | PA 0x0580
+[t=   53] P3.T2  R 0x80A0  page 128 (outer 8, inner 0) off 0xA0 | TLB HIT  | PA 0x05A0
+[t=   54] P3.T2  W 0x80C0  page 128 (outer 8, inner 0) off 0xC0 | TLB HIT  | PA 0x05C0
+[t=   55] P3.T2  R 0x80E0  page 128 (outer 8, inner 0) off 0xE0 | TLB HIT  | PA 0x05E0
+[t=   56] PREEMPT  P3.T2  quantum expired
+[t=   56] DISPATCH P4.T1  (quantum 4)
+[t=   56] CONTEXT SWITCH -> P4
+[t=   56] P4.T1  W 0x5080  page 80 (outer 5, inner 0) off 0x80 | TLB HIT  | PA 0x0680
+[t=   57] P4.T1  R 0x50A0  page 80 (outer 5, inner 0) off 0xA0 | TLB HIT  | PA 0x06A0
+[t=   58] P4.T1  R 0x50C0  page 80 (outer 5, inner 0) off 0xC0 | TLB HIT  | PA 0x06C0
+[t=   59] P4.T1  R 0x50E0  page 80 (outer 5, inner 0) off 0xE0 | TLB HIT  | PA 0x06E0
+[t=   60] PREEMPT  P4.T1  quantum expired
+[t=   60] DISPATCH P4.T2  (quantum 4)
+[t=   60] THREAD SWITCH  -> P4.T2 (same address space)
+[t=   60] P4.T2  W 0xA080  page 160 (outer 10, inner 0) off 0x80 | TLB HIT  | PA 0x0780
+[t=   61] P4.T2  R 0xA0A0  page 160 (outer 10, inner 0) off 0xA0 | TLB HIT  | PA 0x07A0
+[t=   62] P4.T2  R 0xA0C0  page 160 (outer 10, inner 0) off 0xC0 | TLB HIT  | PA 0x07C0
+[t=   63] P4.T2  R 0xA0E0  page 160 (outer 10, inner 0) off 0xE0 | TLB HIT  | PA 0x07E0
+[t=   64] PREEMPT  P4.T2  quantum expired
+[t=   64] DISPATCH P1.T1  (quantum 4)
+[t=   64] CONTEXT SWITCH -> P1
+[t=   64] P1.T1  R 0x1100  page 17 (outer 1, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 8 (free frame) | PA 0x0800
+[t=   65] P1.T1  R 0x1120  page 17 (outer 1, inner 1) off 0x20 | TLB HIT  | PA 0x0820
+[t=   66] P1.T1  R 0x1140  page 17 (outer 1, inner 1) off 0x40 | TLB HIT  | PA 0x0840
+[t=   67] P1.T1  R 0x1160  page 17 (outer 1, inner 1) off 0x60 | TLB HIT  | PA 0x0860
+[t=   68] PREEMPT  P1.T1  quantum expired
+[t=   68] DISPATCH P1.T2  (quantum 4)
+[t=   68] THREAD SWITCH  -> P1.T2 (same address space)
+[t=   68] P1.T2  R 0x3100  page 49 (outer 3, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 9 (free frame) | PA 0x0900
+[t=   69] P1.T2  R 0x3120  page 49 (outer 3, inner 1) off 0x20 | TLB HIT  | PA 0x0920
+[t=   70] P1.T2  R 0x3140  page 49 (outer 3, inner 1) off 0x40 | TLB HIT  | PA 0x0940
+[t=   71] P1.T2  W 0x3160  page 49 (outer 3, inner 1) off 0x60 | TLB HIT  | PA 0x0960
+[t=   72] PREEMPT  P1.T2  quantum expired
+[t=   72] DISPATCH P2.T1  (quantum 4)
+[t=   72] CONTEXT SWITCH -> P2
+[t=   72] P2.T1  R 0x2100  page 33 (outer 2, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 10 (free frame) | PA 0x0A00
+[t=   73] P2.T1  W 0x2120  page 33 (outer 2, inner 1) off 0x20 | TLB HIT  | PA 0x0A20
+[t=   74] P2.T1  R 0x2140  page 33 (outer 2, inner 1) off 0x40 | TLB HIT  | PA 0x0A40
+[t=   75] P2.T1  R 0x2160  page 33 (outer 2, inner 1) off 0x60 | TLB HIT  | PA 0x0A60
+[t=   76] PREEMPT  P2.T1  quantum expired
+[t=   76] DISPATCH P2.T2  (quantum 4)
+[t=   76] THREAD SWITCH  -> P2.T2 (same address space)
+[t=   76] P2.T2  R 0x6100  page 97 (outer 6, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 11 (free frame) | PA 0x0B00
+[t=   77] P2.T2  R 0x6120  page 97 (outer 6, inner 1) off 0x20 | TLB HIT  | PA 0x0B20
+[t=   78] P2.T2  R 0x6140  page 97 (outer 6, inner 1) off 0x40 | TLB HIT  | PA 0x0B40
+[t=   79] P2.T2  R 0x6160  page 97 (outer 6, inner 1) off 0x60 | TLB HIT  | PA 0x0B60
+[t=   80] PREEMPT  P2.T2  quantum expired
+[t=   80] DISPATCH P3.T1  (quantum 4)
+[t=   80] CONTEXT SWITCH -> P3
+[t=   80] P3.T1  R 0x4100  page 65 (outer 4, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 12 (free frame) | PA 0x0C00
+[t=   81] P3.T1  W 0x4120  page 65 (outer 4, inner 1) off 0x20 | TLB HIT  | PA 0x0C20
+[t=   82] P3.T1  R 0x4140  page 65 (outer 4, inner 1) off 0x40 | TLB HIT  | PA 0x0C40
+[t=   83] P3.T1  R 0x4160  page 65 (outer 4, inner 1) off 0x60 | TLB HIT  | PA 0x0C60
+[t=   84] PREEMPT  P3.T1  quantum expired
+[t=   84] DISPATCH P3.T2  (quantum 4)
+[t=   84] THREAD SWITCH  -> P3.T2 (same address space)
+[t=   84] P3.T2  R 0x8100  page 129 (outer 8, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 13 (free frame) | PA 0x0D00
+[t=   85] P3.T2  R 0x8120  page 129 (outer 8, inner 1) off 0x20 | TLB HIT  | PA 0x0D20
+[t=   86] P3.T2  W 0x8140  page 129 (outer 8, inner 1) off 0x40 | TLB HIT  | PA 0x0D40
+[t=   87] P3.T2  R 0x8160  page 129 (outer 8, inner 1) off 0x60 | TLB HIT  | PA 0x0D60
+[t=   88] PREEMPT  P3.T2  quantum expired
+[t=   88] DISPATCH P4.T1  (quantum 4)
+[t=   88] CONTEXT SWITCH -> P4
+[t=   88] P4.T1  R 0x5100  page 81 (outer 5, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 14 (free frame) | PA 0x0E00
+[t=   89] P4.T1  R 0x5120  page 81 (outer 5, inner 1) off 0x20 | TLB HIT  | PA 0x0E20
+[t=   90] P4.T1  R 0x5140  page 81 (outer 5, inner 1) off 0x40 | TLB HIT  | PA 0x0E40
+[t=   91] P4.T1  R 0x5160  page 81 (outer 5, inner 1) off 0x60 | TLB HIT  | PA 0x0E60
+[t=   92] PREEMPT  P4.T1  quantum expired
+[t=   92] DISPATCH P4.T2  (quantum 4)
+[t=   92] THREAD SWITCH  -> P4.T2 (same address space)
+[t=   92] P4.T2  R 0xA100  page 161 (outer 10, inner 1) off 0x00 | TLB MISS | PAGE FAULT -> frame 15 (free frame) | PA 0x0F00
+[t=   93] P4.T2  R 0xA120  page 161 (outer 10, inner 1) off 0x20 | TLB HIT  | PA 0x0F20
+[t=   94] P4.T2  R 0xA140  page 161 (outer 10, inner 1) off 0x40 | TLB HIT  | PA 0x0F40
+[t=   95] P4.T2  W 0xA160  page 161 (outer 10, inner 1) off 0x60 | TLB HIT  | PA 0x0F60
+[t=   96] FINISH   P4.T2  turnaround=96 wait=84
+[t=   96] DISPATCH P1.T1  (quantum 4)
+[t=   96] CONTEXT SWITCH -> P1
+[t=   96] P1.T1  W 0x1180  page 17 (outer 1, inner 1) off 0x80 | TLB HIT  | PA 0x0880
+[t=   97] P1.T1  R 0x11A0  page 17 (outer 1, inner 1) off 0xA0 | TLB HIT  | PA 0x08A0
+[t=   98] P1.T1  W 0x11C0  page 17 (outer 1, inner 1) off 0xC0 | TLB HIT  | PA 0x08C0
+[t=   99] P1.T1  R 0x11E0  page 17 (outer 1, inner 1) off 0xE0 | TLB HIT  | PA 0x08E0
+[t=  100] PREEMPT  P1.T1  quantum expired
+[t=  100] DISPATCH P1.T2  (quantum 4)
+[t=  100] THREAD SWITCH  -> P1.T2 (same address space)
+[t=  100] P1.T2  R 0x3180  page 49 (outer 3, inner 1) off 0x80 | TLB HIT  | PA 0x0980
+[t=  101] P1.T2  W 0x31A0  page 49 (outer 3, inner 1) off 0xA0 | TLB HIT  | PA 0x09A0
+[t=  102] P1.T2  R 0x31C0  page 49 (outer 3, inner 1) off 0xC0 | TLB HIT  | PA 0x09C0
+[t=  103] P1.T2  W 0x31E0  page 49 (outer 3, inner 1) off 0xE0 | TLB HIT  | PA 0x09E0
+[t=  104] PREEMPT  P1.T2  quantum expired
+[t=  104] DISPATCH P2.T1  (quantum 4)
+[t=  104] CONTEXT SWITCH -> P2
+[t=  104] P2.T1  W 0x2180  page 33 (outer 2, inner 1) off 0x80 | TLB HIT  | PA 0x0A80
+[t=  105] P2.T1  R 0x21A0  page 33 (outer 2, inner 1) off 0xA0 | TLB HIT  | PA 0x0AA0
+[t=  106] P2.T1  R 0x21C0  page 33 (outer 2, inner 1) off 0xC0 | TLB HIT  | PA 0x0AC0
+[t=  107] P2.T1  R 0x21E0  page 33 (outer 2, inner 1) off 0xE0 | TLB HIT  | PA 0x0AE0
+[t=  108] PREEMPT  P2.T1  quantum expired
+[t=  108] DISPATCH P2.T2  (quantum 4)
+[t=  108] THREAD SWITCH  -> P2.T2 (same address space)
+[t=  108] P2.T2  R 0x6180  page 97 (outer 6, inner 1) off 0x80 | TLB HIT  | PA 0x0B80
+[t=  109] P2.T2  R 0x61A0  page 97 (outer 6, inner 1) off 0xA0 | TLB HIT  | PA 0x0BA0
+[t=  110] P2.T2  R 0x61C0  page 97 (outer 6, inner 1) off 0xC0 | TLB HIT  | PA 0x0BC0
+[t=  111] P2.T2  W 0x61E0  page 97 (outer 6, inner 1) off 0xE0 | TLB HIT  | PA 0x0BE0
+[t=  112] FINISH   P2.T2  turnaround=112 wait=96
+[t=  112] DISPATCH P3.T1  (quantum 4)
+[t=  112] CONTEXT SWITCH -> P3
+[t=  112] P3.T1  R 0x4180  page 65 (outer 4, inner 1) off 0x80 | TLB HIT  | PA 0x0C80
+[t=  113] P3.T1  R 0x41A0  page 65 (outer 4, inner 1) off 0xA0 | TLB HIT  | PA 0x0CA0
+[t=  114] P3.T1  W 0x41C0  page 65 (outer 4, inner 1) off 0xC0 | TLB HIT  | PA 0x0CC0
+[t=  115] P3.T1  R 0x41E0  page 65 (outer 4, inner 1) off 0xE0 | TLB HIT  | PA 0x0CE0
+[t=  116] PREEMPT  P3.T1  quantum expired
+[t=  116] DISPATCH P3.T2  (quantum 4)
+[t=  116] THREAD SWITCH  -> P3.T2 (same address space)
+[t=  116] P3.T2  W 0x8180  page 129 (outer 8, inner 1) off 0x80 | TLB HIT  | PA 0x0D80
+[t=  117] P3.T2  R 0x81A0  page 129 (outer 8, inner 1) off 0xA0 | TLB HIT  | PA 0x0DA0
+[t=  118] P3.T2  R 0x81C0  page 129 (outer 8, inner 1) off 0xC0 | TLB HIT  | PA 0x0DC0
+[t=  119] P3.T2  W 0x81E0  page 129 (outer 8, inner 1) off 0xE0 | TLB HIT  | PA 0x0DE0
+[t=  120] PREEMPT  P3.T2  quantum expired
+[t=  120] DISPATCH P4.T1  (quantum 4)
+[t=  120] CONTEXT SWITCH -> P4
+[t=  120] P4.T1  R 0x5180  page 81 (outer 5, inner 1) off 0x80 | TLB HIT  | PA 0x0E80
+[t=  121] P4.T1  R 0x51A0  page 81 (outer 5, inner 1) off 0xA0 | TLB HIT  | PA 0x0EA0
+[t=  122] P4.T1  R 0x51C0  page 81 (outer 5, inner 1) off 0xC0 | TLB HIT  | PA 0x0EC0
+[t=  123] P4.T1  W 0x51E0  page 81 (outer 5, inner 1) off 0xE0 | TLB HIT  | PA 0x0EE0
+[t=  124] PREEMPT  P4.T1  quantum expired
+[t=  124] DISPATCH P1.T1  (quantum 4)
+[t=  124] CONTEXT SWITCH -> P1
+[t=  124] P1.T1  W 0x1200  page 18 (outer 1, inner 2) off 0x00 | TLB MISS | PAGE FAULT -> frame 2 (evicted P2 page 32, clean) | PA 0x0200
+[t=  125] P1.T1  R 0x1220  page 18 (outer 1, inner 2) off 0x20 | TLB HIT  | PA 0x0220
+[t=  126] P1.T1  R 0x1240  page 18 (outer 1, inner 2) off 0x40 | TLB HIT  | PA 0x0240
+[t=  127] P1.T1  W 0x1260  page 18 (outer 1, inner 2) off 0x60 | TLB HIT  | PA 0x0260
+[t=  128] PREEMPT  P1.T1  quantum expired
+[t=  128] DISPATCH P1.T2  (quantum 4)
+[t=  128] THREAD SWITCH  -> P1.T2 (same address space)
+[t=  128] P1.T2  R 0x3200  page 50 (outer 3, inner 2) off 0x00 | TLB MISS | PAGE FAULT -> frame 3 (evicted P2 page 96, dirty -> write-back) | PA 0x0300
+[t=  129] P1.T2  R 0x3220  page 50 (outer 3, inner 2) off 0x20 | TLB HIT  | PA 0x0320
+[t=  130] P1.T2  W 0x3240  page 50 (outer 3, inner 2) off 0x40 | TLB HIT  | PA 0x0340
+[t=  131] P1.T2  R 0x3260  page 50 (outer 3, inner 2) off 0x60 | TLB HIT  | PA 0x0360
+[t=  132] PREEMPT  P1.T2  quantum expired
+[t=  132] DISPATCH P2.T1  (quantum 4)
+[t=  132] CONTEXT SWITCH -> P2
+[t=  132] P2.T1  R 0x2200  page 34 (outer 2, inner 2) off 0x00 | TLB MISS | PAGE FAULT -> frame 4 (evicted P3 page 64, dirty -> write-back) | PA 0x0400
+[t=  133] P2.T1  R 0x2220  page 34 (outer 2, inner 2) off 0x20 | TLB HIT  | PA 0x0420
+[t=  134] P2.T1  R 0x2240  page 34 (outer 2, inner 2) off 0x40 | TLB HIT  | PA 0x0440
+[t=  135] P2.T1  R 0x2260  page 34 (outer 2, inner 2) off 0x60 | TLB HIT  | PA 0x0460
+[t=  136] PREEMPT  P2.T1  quantum expired
+[t=  136] DISPATCH P3.T1  (quantum 4)
+[t=  136] CONTEXT SWITCH -> P3
+[t=  136] P3.T1  R 0x4200  page 66 (outer 4, inner 2) off 0x00 | TLB MISS | PAGE FAULT -> frame 5 (evicted P3 page 128, dirty -> write-back) | PA 0x0500
+[t=  137] P3.T1  W 0x4220  page 66 (outer 4, inner 2) off 0x20 | TLB HIT  | PA 0x0520
+[t=  138] P3.T1  R 0x4240  page 66 (outer 4, inner 2) off 0x40 | TLB HIT  | PA 0x0540
+[t=  139] P3.T1  R 0x4260  page 66 (outer 4, inner 2) off 0x60 | TLB HIT  | PA 0x0560
+[t=  140] PREEMPT  P3.T1  quantum expired
+[t=  140] DISPATCH P3.T2  (quantum 4)
+[t=  140] THREAD SWITCH  -> P3.T2 (same address space)
+[t=  140] P3.T2  R 0x8200  page 130 (outer 8, inner 2) off 0x00 | TLB MISS | PAGE FAULT -> frame 6 (evicted P4 page 80, dirty -> write-back) | PA 0x0600
+[t=  141] P3.T2  W 0x8220  page 130 (outer 8, inner 2) off 0x20 | TLB HIT  | PA 0x0620
+[t=  142] P3.T2  R 0x8240  page 130 (outer 8, inner 2) off 0x40 | TLB HIT  | PA 0x0640
+[t=  143] P3.T2  R 0x8260  page 130 (outer 8, inner 2) off 0x60 | TLB HIT  | PA 0x0660
+[t=  144] PREEMPT  P3.T2  quantum expired
+[t=  144] DISPATCH P4.T1  (quantum 4)
+[t=  144] CONTEXT SWITCH -> P4
+[t=  144] P4.T1  W 0x5200  page 82 (outer 5, inner 2) off 0x00 | TLB MISS | PAGE FAULT -> frame 7 (evicted P4 page 160, dirty -> write-back) | PA 0x0700
+[t=  145] P4.T1  R 0x5220  page 82 (outer 5, inner 2) off 0x20 | TLB HIT  | PA 0x0720
+[t=  146] P4.T1  W 0x5240  page 82 (outer 5, inner 2) off 0x40 | TLB HIT  | PA 0x0740
+[t=  147] P4.T1  R 0x5260  page 82 (outer 5, inner 2) off 0x60 | TLB HIT  | PA 0x0760
+[t=  148] PREEMPT  P4.T1  quantum expired
+[t=  148] DISPATCH P1.T1  (quantum 4)
+[t=  148] CONTEXT SWITCH -> P1
+[t=  148] P1.T1  W 0x1280  page 18 (outer 1, inner 2) off 0x80 | TLB HIT  | PA 0x0280
+[t=  149] P1.T1  R 0x12A0  page 18 (outer 1, inner 2) off 0xA0 | TLB HIT  | PA 0x02A0
+[t=  150] P1.T1  R 0x12C0  page 18 (outer 1, inner 2) off 0xC0 | TLB HIT  | PA 0x02C0
+[t=  151] P1.T1  R 0x12E0  page 18 (outer 1, inner 2) off 0xE0 | TLB HIT  | PA 0x02E0
+[t=  152] PREEMPT  P1.T1  quantum expired
+[t=  152] DISPATCH P1.T2  (quantum 4)
+[t=  152] THREAD SWITCH  -> P1.T2 (same address space)
+[t=  152] P1.T2  R 0x3280  page 50 (outer 3, inner 2) off 0x80 | TLB HIT  | PA 0x0380
+[t=  153] P1.T2  W 0x32A0  page 50 (outer 3, inner 2) off 0xA0 | TLB HIT  | PA 0x03A0
+[t=  154] P1.T2  W 0x32C0  page 50 (outer 3, inner 2) off 0xC0 | TLB HIT  | PA 0x03C0
+[t=  155] P1.T2  R 0x32E0  page 50 (outer 3, inner 2) off 0xE0 | TLB HIT  | PA 0x03E0
+[t=  156] FINISH   P1.T2  turnaround=156 wait=132
+[t=  156] DISPATCH P2.T1  (quantum 4)
+[t=  156] CONTEXT SWITCH -> P2
+[t=  156] P2.T1  R 0x2280  page 34 (outer 2, inner 2) off 0x80 | TLB HIT  | PA 0x0480
+[t=  157] P2.T1  W 0x22A0  page 34 (outer 2, inner 2) off 0xA0 | TLB HIT  | PA 0x04A0
+[t=  158] P2.T1  R 0x22C0  page 34 (outer 2, inner 2) off 0xC0 | TLB HIT  | PA 0x04C0
+[t=  159] P2.T1  R 0x22E0  page 34 (outer 2, inner 2) off 0xE0 | TLB HIT  | PA 0x04E0
+[t=  160] PREEMPT  P2.T1  quantum expired
+[t=  160] DISPATCH P3.T1  (quantum 4)
+[t=  160] CONTEXT SWITCH -> P3
+[t=  160] P3.T1  R 0x4280  page 66 (outer 4, inner 2) off 0x80 | TLB HIT  | PA 0x0580
+[t=  161] P3.T1  W 0x42A0  page 66 (outer 4, inner 2) off 0xA0 | TLB HIT  | PA 0x05A0
+[t=  162] P3.T1  R 0x42C0  page 66 (outer 4, inner 2) off 0xC0 | TLB HIT  | PA 0x05C0
+[t=  163] P3.T1  W 0x42E0  page 66 (outer 4, inner 2) off 0xE0 | TLB HIT  | PA 0x05E0
+[t=  164] PREEMPT  P3.T1  quantum expired
+[t=  164] DISPATCH P3.T2  (quantum 4)
+[t=  164] THREAD SWITCH  -> P3.T2 (same address space)
+[t=  164] P3.T2  W 0x8280  page 130 (outer 8, inner 2) off 0x80 | TLB HIT  | PA 0x0680
+[t=  165] P3.T2  R 0x82A0  page 130 (outer 8, inner 2) off 0xA0 | TLB HIT  | PA 0x06A0
+[t=  166] P3.T2  W 0x82C0  page 130 (outer 8, inner 2) off 0xC0 | TLB HIT  | PA 0x06C0
+[t=  167] P3.T2  R 0x82E0  page 130 (outer 8, inner 2) off 0xE0 | TLB HIT  | PA 0x06E0
+[t=  168] PREEMPT  P3.T2  quantum expired
+[t=  168] DISPATCH P4.T1  (quantum 4)
+[t=  168] CONTEXT SWITCH -> P4
+[t=  168] P4.T1  R 0x5280  page 82 (outer 5, inner 2) off 0x80 | TLB HIT  | PA 0x0780
+[t=  169] P4.T1  R 0x52A0  page 82 (outer 5, inner 2) off 0xA0 | TLB HIT  | PA 0x07A0
+[t=  170] P4.T1  R 0x52C0  page 82 (outer 5, inner 2) off 0xC0 | TLB HIT  | PA 0x07C0
+[t=  171] P4.T1  R 0x52E0  page 82 (outer 5, inner 2) off 0xE0 | TLB HIT  | PA 0x07E0
+[t=  172] PREEMPT  P4.T1  quantum expired
+[t=  172] DISPATCH P1.T1  (quantum 4)
+[t=  172] CONTEXT SWITCH -> P1
+[t=  172] P1.T1  R 0x1300  page 19 (outer 1, inner 3) off 0x00 | TLB MISS | PAGE FAULT -> frame 8 (evicted P1 page 17, dirty -> write-back) | PA 0x0800
+[t=  173] P1.T1  R 0x1320  page 19 (outer 1, inner 3) off 0x20 | TLB HIT  | PA 0x0820
+[t=  174] P1.T1  R 0x1340  page 19 (outer 1, inner 3) off 0x40 | TLB HIT  | PA 0x0840
+[t=  175] P1.T1  W 0x1360  page 19 (outer 1, inner 3) off 0x60 | TLB HIT  | PA 0x0860
+[t=  176] PREEMPT  P1.T1  quantum expired
+[t=  176] DISPATCH P2.T1  (quantum 4)
+[t=  176] CONTEXT SWITCH -> P2
+[t=  176] P2.T1  R 0x2300  page 35 (outer 2, inner 3) off 0x00 | TLB MISS | PAGE FAULT -> frame 9 (evicted P1 page 49, dirty -> write-back) | PA 0x0900
+[t=  177] P2.T1  R 0x2320  page 35 (outer 2, inner 3) off 0x20 | TLB HIT  | PA 0x0920
+[t=  178] P2.T1  R 0x2340  page 35 (outer 2, inner 3) off 0x40 | TLB HIT  | PA 0x0940
+[t=  179] P2.T1  R 0x2360  page 35 (outer 2, inner 3) off 0x60 | TLB HIT  | PA 0x0960
+[t=  180] PREEMPT  P2.T1  quantum expired
+[t=  180] DISPATCH P3.T1  (quantum 4)
+[t=  180] CONTEXT SWITCH -> P3
+[t=  180] P3.T1  R 0x4300  page 67 (outer 4, inner 3) off 0x00 | TLB MISS | PAGE FAULT -> frame 10 (evicted P2 page 33, dirty -> write-back) | PA 0x0A00
+[t=  181] P3.T1  R 0x4320  page 67 (outer 4, inner 3) off 0x20 | TLB HIT  | PA 0x0A20
+[t=  182] P3.T1  R 0x4340  page 67 (outer 4, inner 3) off 0x40 | TLB HIT  | PA 0x0A40
+[t=  183] P3.T1  R 0x4360  page 67 (outer 4, inner 3) off 0x60 | TLB HIT  | PA 0x0A60
+[t=  184] PREEMPT  P3.T1  quantum expired
+[t=  184] DISPATCH P3.T2  (quantum 4)
+[t=  184] THREAD SWITCH  -> P3.T2 (same address space)
+[t=  184] P3.T2  R 0x8300  page 131 (outer 8, inner 3) off 0x00 | TLB MISS | PAGE FAULT -> frame 11 (evicted P2 page 97, dirty -> write-back) | PA 0x0B00
+[t=  185] P3.T2  R 0x8320  page 131 (outer 8, inner 3) off 0x20 | TLB HIT  | PA 0x0B20
+[t=  186] P3.T2  W 0x8340  page 131 (outer 8, inner 3) off 0x40 | TLB HIT  | PA 0x0B40
+[t=  187] P3.T2  R 0x8360  page 131 (outer 8, inner 3) off 0x60 | TLB HIT  | PA 0x0B60
+[t=  188] PREEMPT  P3.T2  quantum expired
+[t=  188] DISPATCH P4.T1  (quantum 4)
+[t=  188] CONTEXT SWITCH -> P4
+[t=  188] P4.T1  R 0x5300  page 83 (outer 5, inner 3) off 0x00 | TLB MISS | PAGE FAULT -> frame 12 (evicted P3 page 65, dirty -> write-back) | PA 0x0C00
+[t=  189] P4.T1  R 0x5320  page 83 (outer 5, inner 3) off 0x20 | TLB HIT  | PA 0x0C20
+[t=  190] P4.T1  W 0x5340  page 83 (outer 5, inner 3) off 0x40 | TLB HIT  | PA 0x0C40
+[t=  191] P4.T1  W 0x5360  page 83 (outer 5, inner 3) off 0x60 | TLB HIT  | PA 0x0C60
+[t=  192] PREEMPT  P4.T1  quantum expired
+[t=  192] DISPATCH P1.T1  (quantum 4)
+[t=  192] CONTEXT SWITCH -> P1
+[t=  192] P1.T1  R 0x1380  page 19 (outer 1, inner 3) off 0x80 | TLB HIT  | PA 0x0880
+[t=  193] P1.T1  W 0x13A0  page 19 (outer 1, inner 3) off 0xA0 | TLB HIT  | PA 0x08A0
+[t=  194] P1.T1  R 0x13C0  page 19 (outer 1, inner 3) off 0xC0 | TLB HIT  | PA 0x08C0
+[t=  195] P1.T1  R 0x13E0  page 19 (outer 1, inner 3) off 0xE0 | TLB HIT  | PA 0x08E0
+[t=  196] PREEMPT  P1.T1  quantum expired
+[t=  196] DISPATCH P2.T1  (quantum 4)
+[t=  196] CONTEXT SWITCH -> P2
+[t=  196] P2.T1  R 0x2380  page 35 (outer 2, inner 3) off 0x80 | TLB HIT  | PA 0x0980
+[t=  197] P2.T1  W 0x23A0  page 35 (outer 2, inner 3) off 0xA0 | TLB HIT  | PA 0x09A0
+[t=  198] P2.T1  R 0x23C0  page 35 (outer 2, inner 3) off 0xC0 | TLB HIT  | PA 0x09C0
+[t=  199] P2.T1  R 0x23E0  page 35 (outer 2, inner 3) off 0xE0 | TLB HIT  | PA 0x09E0
+[t=  200] PREEMPT  P2.T1  quantum expired
+[t=  200] DISPATCH P3.T1  (quantum 4)
+[t=  200] CONTEXT SWITCH -> P3
+[t=  200] P3.T1  R 0x4380  page 67 (outer 4, inner 3) off 0x80 | TLB HIT  | PA 0x0A80
+[t=  201] P3.T1  W 0x43A0  page 67 (outer 4, inner 3) off 0xA0 | TLB HIT  | PA 0x0AA0
+[t=  202] P3.T1  R 0x43C0  page 67 (outer 4, inner 3) off 0xC0 | TLB HIT  | PA 0x0AC0
+[t=  203] P3.T1  W 0x43E0  page 67 (outer 4, inner 3) off 0xE0 | TLB HIT  | PA 0x0AE0
+[t=  204] FINISH   P3.T1  turnaround=204 wait=172
+[t=  204] DISPATCH P3.T2  (quantum 4)
+[t=  204] THREAD SWITCH  -> P3.T2 (same address space)
+[t=  204] P3.T2  W 0x8380  page 131 (outer 8, inner 3) off 0x80 | TLB HIT  | PA 0x0B80
+[t=  205] P3.T2  R 0x83A0  page 131 (outer 8, inner 3) off 0xA0 | TLB HIT  | PA 0x0BA0
+[t=  206] P3.T2  R 0x83C0  page 131 (outer 8, inner 3) off 0xC0 | TLB HIT  | PA 0x0BC0
+[t=  207] P3.T2  W 0x83E0  page 131 (outer 8, inner 3) off 0xE0 | TLB HIT  | PA 0x0BE0
+[t=  208] PREEMPT  P3.T2  quantum expired
+[t=  208] DISPATCH P4.T1  (quantum 4)
+[t=  208] CONTEXT SWITCH -> P4
+[t=  208] P4.T1  W 0x5380  page 83 (outer 5, inner 3) off 0x80 | TLB HIT  | PA 0x0C80
+[t=  209] P4.T1  R 0x53A0  page 83 (outer 5, inner 3) off 0xA0 | TLB HIT  | PA 0x0CA0
+[t=  210] P4.T1  W 0x53C0  page 83 (outer 5, inner 3) off 0xC0 | TLB HIT  | PA 0x0CC0
+[t=  211] P4.T1  W 0x53E0  page 83 (outer 5, inner 3) off 0xE0 | TLB HIT  | PA 0x0CE0
+[t=  212] PREEMPT  P4.T1  quantum expired
+[t=  212] DISPATCH P1.T1  (quantum 4)
+[t=  212] CONTEXT SWITCH -> P1
+[t=  212] P1.T1  R 0x1400  page 20 (outer 1, inner 4) off 0x00 | TLB MISS | PAGE FAULT -> frame 13 (evicted P3 page 129, dirty -> write-back) | PA 0x0D00
+[t=  213] P1.T1  R 0x1420  page 20 (outer 1, inner 4) off 0x20 | TLB HIT  | PA 0x0D20
+[t=  214] P1.T1  R 0x1440  page 20 (outer 1, inner 4) off 0x40 | TLB HIT  | PA 0x0D40
+[t=  215] P1.T1  W 0x1460  page 20 (outer 1, inner 4) off 0x60 | TLB HIT  | PA 0x0D60
+[t=  216] PREEMPT  P1.T1  quantum expired
+[t=  216] DISPATCH P2.T1  (quantum 4)
+[t=  216] CONTEXT SWITCH -> P2
+[t=  216] P2.T1  W 0x2400  page 36 (outer 2, inner 4) off 0x00 | TLB MISS | PAGE FAULT -> frame 14 (evicted P4 page 81, dirty -> write-back) | PA 0x0E00
+[t=  217] P2.T1  R 0x2420  page 36 (outer 2, inner 4) off 0x20 | TLB HIT  | PA 0x0E20
+[t=  218] P2.T1  R 0x2440  page 36 (outer 2, inner 4) off 0x40 | TLB HIT  | PA 0x0E40
+[t=  219] P2.T1  R 0x2460  page 36 (outer 2, inner 4) off 0x60 | TLB HIT  | PA 0x0E60
+[t=  220] PREEMPT  P2.T1  quantum expired
+[t=  220] DISPATCH P3.T2  (quantum 4)
+[t=  220] CONTEXT SWITCH -> P3
+[t=  220] P3.T2  R 0x8400  page 132 (outer 8, inner 4) off 0x00 | TLB MISS | PAGE FAULT -> frame 15 (evicted P4 page 161, dirty -> write-back) | PA 0x0F00
+[t=  221] P3.T2  W 0x8420  page 132 (outer 8, inner 4) off 0x20 | TLB HIT  | PA 0x0F20
+[t=  222] P3.T2  R 0x8440  page 132 (outer 8, inner 4) off 0x40 | TLB HIT  | PA 0x0F40
+[t=  223] P3.T2  W 0x8460  page 132 (outer 8, inner 4) off 0x60 | TLB HIT  | PA 0x0F60
+[t=  224] PREEMPT  P3.T2  quantum expired
+[t=  224] DISPATCH P4.T1  (quantum 4)
+[t=  224] CONTEXT SWITCH -> P4
+[t=  224] P4.T1  R 0x5400  page 84 (outer 5, inner 4) off 0x00 | TLB MISS | PAGE FAULT -> frame 0 (evicted P1 page 16, dirty -> write-back) | PA 0x0000
+[t=  225] P4.T1  R 0x5420  page 84 (outer 5, inner 4) off 0x20 | TLB HIT  | PA 0x0020
+[t=  226] P4.T1  R 0x5440  page 84 (outer 5, inner 4) off 0x40 | TLB HIT  | PA 0x0040
+[t=  227] P4.T1  R 0x5460  page 84 (outer 5, inner 4) off 0x60 | TLB HIT  | PA 0x0060
+[t=  228] PREEMPT  P4.T1  quantum expired
+[t=  228] DISPATCH P1.T1  (quantum 4)
+[t=  228] CONTEXT SWITCH -> P1
+[t=  228] P1.T1  R 0x1480  page 20 (outer 1, inner 4) off 0x80 | TLB HIT  | PA 0x0D80
+[t=  229] P1.T1  R 0x14A0  page 20 (outer 1, inner 4) off 0xA0 | TLB HIT  | PA 0x0DA0
+[t=  230] P1.T1  W 0x14C0  page 20 (outer 1, inner 4) off 0xC0 | TLB HIT  | PA 0x0DC0
+[t=  231] P1.T1  W 0x14E0  page 20 (outer 1, inner 4) off 0xE0 | TLB HIT  | PA 0x0DE0
+[t=  232] FINISH   P1.T1  turnaround=232 wait=192
+[t=  232] DISPATCH P2.T1  (quantum 4)
+[t=  232] CONTEXT SWITCH -> P2
+[t=  232] P2.T1  R 0x2480  page 36 (outer 2, inner 4) off 0x80 | TLB HIT  | PA 0x0E80
+[t=  233] P2.T1  R 0x24A0  page 36 (outer 2, inner 4) off 0xA0 | TLB HIT  | PA 0x0EA0
+[t=  234] P2.T1  R 0x24C0  page 36 (outer 2, inner 4) off 0xC0 | TLB HIT  | PA 0x0EC0
+[t=  235] P2.T1  R 0x24E0  page 36 (outer 2, inner 4) off 0xE0 | TLB HIT  | PA 0x0EE0
+[t=  236] PREEMPT  P2.T1  quantum expired
+[t=  236] DISPATCH P3.T2  (quantum 4)
+[t=  236] CONTEXT SWITCH -> P3
+[t=  236] P3.T2  R 0x8480  page 132 (outer 8, inner 4) off 0x80 | TLB HIT  | PA 0x0F80
+[t=  237] P3.T2  R 0x84A0  page 132 (outer 8, inner 4) off 0xA0 | TLB HIT  | PA 0x0FA0
+[t=  238] P3.T2  R 0x84C0  page 132 (outer 8, inner 4) off 0xC0 | TLB HIT  | PA 0x0FC0
+[t=  239] P3.T2  W 0x84E0  page 132 (outer 8, inner 4) off 0xE0 | TLB HIT  | PA 0x0FE0
+[t=  240] PREEMPT  P3.T2  quantum expired
+[t=  240] DISPATCH P4.T1  (quantum 4)
+[t=  240] CONTEXT SWITCH -> P4
+[t=  240] P4.T1  R 0x5480  page 84 (outer 5, inner 4) off 0x80 | TLB HIT  | PA 0x0080
+[t=  241] P4.T1  W 0x54A0  page 84 (outer 5, inner 4) off 0xA0 | TLB HIT  | PA 0x00A0
+[t=  242] P4.T1  R 0x54C0  page 84 (outer 5, inner 4) off 0xC0 | TLB HIT  | PA 0x00C0
+[t=  243] P4.T1  W 0x54E0  page 84 (outer 5, inner 4) off 0xE0 | TLB HIT  | PA 0x00E0
+[t=  244] PREEMPT  P4.T1  quantum expired
+[t=  244] DISPATCH P2.T1  (quantum 4)
+[t=  244] CONTEXT SWITCH -> P2
+[t=  244] P2.T1  R 0x2500  page 37 (outer 2, inner 5) off 0x00 | TLB MISS | PAGE FAULT -> frame 1 (evicted P1 page 48, dirty -> write-back) | PA 0x0100
+[t=  245] P2.T1  R 0x2520  page 37 (outer 2, inner 5) off 0x20 | TLB HIT  | PA 0x0120
+[t=  246] P2.T1  W 0x2540  page 37 (outer 2, inner 5) off 0x40 | TLB HIT  | PA 0x0140
+[t=  247] P2.T1  R 0x2560  page 37 (outer 2, inner 5) off 0x60 | TLB HIT  | PA 0x0160
+[t=  248] PREEMPT  P2.T1  quantum expired
+[t=  248] DISPATCH P3.T2  (quantum 4)
+[t=  248] CONTEXT SWITCH -> P3
+[t=  248] P3.T2  R 0x8500  page 133 (outer 8, inner 5) off 0x00 | TLB MISS | PAGE FAULT -> frame 2 (evicted P1 page 18, dirty -> write-back) | PA 0x0200
+[t=  249] P3.T2  R 0x8520  page 133 (outer 8, inner 5) off 0x20 | TLB HIT  | PA 0x0220
+[t=  250] P3.T2  W 0x8540  page 133 (outer 8, inner 5) off 0x40 | TLB HIT  | PA 0x0240
+[t=  251] P3.T2  R 0x8560  page 133 (outer 8, inner 5) off 0x60 | TLB HIT  | PA 0x0260
+[t=  252] PREEMPT  P3.T2  quantum expired
+[t=  252] DISPATCH P4.T1  (quantum 4)
+[t=  252] CONTEXT SWITCH -> P4
+[t=  252] P4.T1  R 0x5500  page 85 (outer 5, inner 5) off 0x00 | TLB MISS | PAGE FAULT -> frame 3 (evicted P1 page 50, dirty -> write-back) | PA 0x0300
+[t=  253] P4.T1  R 0x5520  page 85 (outer 5, inner 5) off 0x20 | TLB HIT  | PA 0x0320
+[t=  254] P4.T1  R 0x5540  page 85 (outer 5, inner 5) off 0x40 | TLB HIT  | PA 0x0340
+[t=  255] P4.T1  R 0x5560  page 85 (outer 5, inner 5) off 0x60 | TLB HIT  | PA 0x0360
+[t=  256] PREEMPT  P4.T1  quantum expired
+[t=  256] DISPATCH P2.T1  (quantum 4)
+[t=  256] CONTEXT SWITCH -> P2
+[t=  256] P2.T1  R 0x2580  page 37 (outer 2, inner 5) off 0x80 | TLB HIT  | PA 0x0180
+[t=  257] P2.T1  R 0x25A0  page 37 (outer 2, inner 5) off 0xA0 | TLB HIT  | PA 0x01A0
+[t=  258] P2.T1  R 0x25C0  page 37 (outer 2, inner 5) off 0xC0 | TLB HIT  | PA 0x01C0
+[t=  259] P2.T1  R 0x25E0  page 37 (outer 2, inner 5) off 0xE0 | TLB HIT  | PA 0x01E0
+[t=  260] PREEMPT  P2.T1  quantum expired
+[t=  260] DISPATCH P3.T2  (quantum 4)
+[t=  260] CONTEXT SWITCH -> P3
+[t=  260] P3.T2  R 0x8580  page 133 (outer 8, inner 5) off 0x80 | TLB HIT  | PA 0x0280
+[t=  261] P3.T2  W 0x85A0  page 133 (outer 8, inner 5) off 0xA0 | TLB HIT  | PA 0x02A0
+[t=  262] P3.T2  R 0x85C0  page 133 (outer 8, inner 5) off 0xC0 | TLB HIT  | PA 0x02C0
+[t=  263] P3.T2  R 0x85E0  page 133 (outer 8, inner 5) off 0xE0 | TLB HIT  | PA 0x02E0
+[t=  264] FINISH   P3.T2  turnaround=264 wait=216
+[t=  264] DISPATCH P4.T1  (quantum 4)
+[t=  264] CONTEXT SWITCH -> P4
+[t=  264] P4.T1  R 0x5580  page 85 (outer 5, inner 5) off 0x80 | TLB HIT  | PA 0x0380
+[t=  265] P4.T1  W 0x55A0  page 85 (outer 5, inner 5) off 0xA0 | TLB HIT  | PA 0x03A0
+[t=  266] P4.T1  R 0x55C0  page 85 (outer 5, inner 5) off 0xC0 | TLB HIT  | PA 0x03C0
+[t=  267] P4.T1  W 0x55E0  page 85 (outer 5, inner 5) off 0xE0 | TLB HIT  | PA 0x03E0
+[t=  268] PREEMPT  P4.T1  quantum expired
+[t=  268] DISPATCH P2.T1  (quantum 4)
+[t=  268] CONTEXT SWITCH -> P2
+[t=  268] P2.T1  W 0x2600  page 38 (outer 2, inner 6) off 0x00 | TLB MISS | PAGE FAULT -> frame 4 (evicted P2 page 34, dirty -> write-back) | PA 0x0400
+[t=  269] P2.T1  R 0x2620  page 38 (outer 2, inner 6) off 0x20 | TLB HIT  | PA 0x0420
+[t=  270] P2.T1  R 0x2640  page 38 (outer 2, inner 6) off 0x40 | TLB HIT  | PA 0x0440
+[t=  271] P2.T1  R 0x2660  page 38 (outer 2, inner 6) off 0x60 | TLB HIT  | PA 0x0460
+[t=  272] PREEMPT  P2.T1  quantum expired
+[t=  272] DISPATCH P4.T1  (quantum 4)
+[t=  272] CONTEXT SWITCH -> P4
+[t=  272] P4.T1  R 0x5600  page 86 (outer 5, inner 6) off 0x00 | TLB MISS | PAGE FAULT -> frame 5 (evicted P3 page 66, dirty -> write-back) | PA 0x0500
+[t=  273] P4.T1  R 0x5620  page 86 (outer 5, inner 6) off 0x20 | TLB HIT  | PA 0x0520
+[t=  274] P4.T1  W 0x5640  page 86 (outer 5, inner 6) off 0x40 | TLB HIT  | PA 0x0540
+[t=  275] P4.T1  R 0x5660  page 86 (outer 5, inner 6) off 0x60 | TLB HIT  | PA 0x0560
+[t=  276] PREEMPT  P4.T1  quantum expired
+[t=  276] DISPATCH P2.T1  (quantum 4)
+[t=  276] CONTEXT SWITCH -> P2
+[t=  276] P2.T1  R 0x2680  page 38 (outer 2, inner 6) off 0x80 | TLB HIT  | PA 0x0480
+[t=  277] P2.T1  W 0x26A0  page 38 (outer 2, inner 6) off 0xA0 | TLB HIT  | PA 0x04A0
+[t=  278] P2.T1  W 0x26C0  page 38 (outer 2, inner 6) off 0xC0 | TLB HIT  | PA 0x04C0
+[t=  279] P2.T1  R 0x26E0  page 38 (outer 2, inner 6) off 0xE0 | TLB HIT  | PA 0x04E0
+[t=  280] PREEMPT  P2.T1  quantum expired
+[t=  280] DISPATCH P4.T1  (quantum 4)
+[t=  280] CONTEXT SWITCH -> P4
+[t=  280] P4.T1  W 0x5680  page 86 (outer 5, inner 6) off 0x80 | TLB HIT  | PA 0x0580
+[t=  281] P4.T1  W 0x56A0  page 86 (outer 5, inner 6) off 0xA0 | TLB HIT  | PA 0x05A0
+[t=  282] P4.T1  R 0x56C0  page 86 (outer 5, inner 6) off 0xC0 | TLB HIT  | PA 0x05C0
+[t=  283] P4.T1  R 0x56E0  page 86 (outer 5, inner 6) off 0xE0 | TLB HIT  | PA 0x05E0
+[t=  284] PREEMPT  P4.T1  quantum expired
+[t=  284] DISPATCH P2.T1  (quantum 4)
+[t=  284] CONTEXT SWITCH -> P2
+[t=  284] P2.T1  R 0x2700  page 39 (outer 2, inner 7) off 0x00 | TLB MISS | PAGE FAULT -> frame 6 (evicted P3 page 130, dirty -> write-back) | PA 0x0600
+[t=  285] P2.T1  R 0x2720  page 39 (outer 2, inner 7) off 0x20 | TLB HIT  | PA 0x0620
+[t=  286] P2.T1  R 0x2740  page 39 (outer 2, inner 7) off 0x40 | TLB HIT  | PA 0x0640
+[t=  287] P2.T1  W 0x2760  page 39 (outer 2, inner 7) off 0x60 | TLB HIT  | PA 0x0660
+[t=  288] PREEMPT  P2.T1  quantum expired
+[t=  288] DISPATCH P4.T1  (quantum 4)
+[t=  288] CONTEXT SWITCH -> P4
+[t=  288] P4.T1  R 0x5700  page 87 (outer 5, inner 7) off 0x00 | TLB MISS | PAGE FAULT -> frame 7 (evicted P4 page 82, dirty -> write-back) | PA 0x0700
+[t=  289] P4.T1  R 0x5720  page 87 (outer 5, inner 7) off 0x20 | TLB HIT  | PA 0x0720
+[t=  290] P4.T1  R 0x5740  page 87 (outer 5, inner 7) off 0x40 | TLB HIT  | PA 0x0740
+[t=  291] P4.T1  R 0x5760  page 87 (outer 5, inner 7) off 0x60 | TLB HIT  | PA 0x0760
+[t=  292] PREEMPT  P4.T1  quantum expired
+[t=  292] DISPATCH P2.T1  (quantum 4)
+[t=  292] CONTEXT SWITCH -> P2
+[t=  292] P2.T1  R 0x2780  page 39 (outer 2, inner 7) off 0x80 | TLB HIT  | PA 0x0680
+[t=  293] P2.T1  R 0x27A0  page 39 (outer 2, inner 7) off 0xA0 | TLB HIT  | PA 0x06A0
+[t=  294] P2.T1  R 0x27C0  page 39 (outer 2, inner 7) off 0xC0 | TLB HIT  | PA 0x06C0
+[t=  295] P2.T1  R 0x27E0  page 39 (outer 2, inner 7) off 0xE0 | TLB HIT  | PA 0x06E0
+[t=  296] FINISH   P2.T1  turnaround=296 wait=232
+[t=  296] DISPATCH P4.T1  (quantum 4)
+[t=  296] CONTEXT SWITCH -> P4
+[t=  296] P4.T1  W 0x5780  page 87 (outer 5, inner 7) off 0x80 | TLB HIT  | PA 0x0780
+[t=  297] P4.T1  W 0x57A0  page 87 (outer 5, inner 7) off 0xA0 | TLB HIT  | PA 0x07A0
+[t=  298] P4.T1  W 0x57C0  page 87 (outer 5, inner 7) off 0xC0 | TLB HIT  | PA 0x07C0
+[t=  299] P4.T1  R 0x57E0  page 87 (outer 5, inner 7) off 0xE0 | TLB HIT  | PA 0x07E0
+[t=  300] PREEMPT  P4.T1  quantum expired
+[t=  300] DISPATCH P4.T1  (quantum 4)
+[t=  300] P4.T1  W 0x5800  page 88 (outer 5, inner 8) off 0x00 | TLB MISS | PAGE FAULT -> frame 8 (evicted P1 page 19, dirty -> write-back) | PA 0x0800
+[t=  301] P4.T1  W 0x5820  page 88 (outer 5, inner 8) off 0x20 | TLB HIT  | PA 0x0820
+[t=  302] P4.T1  W 0x5840  page 88 (outer 5, inner 8) off 0x40 | TLB HIT  | PA 0x0840
+[t=  303] P4.T1  W 0x5860  page 88 (outer 5, inner 8) off 0x60 | TLB HIT  | PA 0x0860
+[t=  304] PREEMPT  P4.T1  quantum expired
+[t=  304] DISPATCH P4.T1  (quantum 4)
+[t=  304] P4.T1  R 0x5880  page 88 (outer 5, inner 8) off 0x80 | TLB HIT  | PA 0x0880
+[t=  305] P4.T1  R 0x58A0  page 88 (outer 5, inner 8) off 0xA0 | TLB HIT  | PA 0x08A0
+[t=  306] P4.T1  R 0x58C0  page 88 (outer 5, inner 8) off 0xC0 | TLB HIT  | PA 0x08C0
+[t=  307] P4.T1  W 0x58E0  page 88 (outer 5, inner 8) off 0xE0 | TLB HIT  | PA 0x08E0
+[t=  308] PREEMPT  P4.T1  quantum expired
+[t=  308] DISPATCH P4.T1  (quantum 4)
+[t=  308] P4.T1  W 0x5900  page 89 (outer 5, inner 9) off 0x00 | TLB MISS | PAGE FAULT -> frame 9 (evicted P2 page 35, dirty -> write-back) | PA 0x0900
+[t=  309] P4.T1  W 0x5920  page 89 (outer 5, inner 9) off 0x20 | TLB HIT  | PA 0x0920
+[t=  310] P4.T1  R 0x5940  page 89 (outer 5, inner 9) off 0x40 | TLB HIT  | PA 0x0940
+[t=  311] P4.T1  W 0x5960  page 89 (outer 5, inner 9) off 0x60 | TLB HIT  | PA 0x0960
+[t=  312] PREEMPT  P4.T1  quantum expired
+[t=  312] DISPATCH P4.T1  (quantum 4)
+[t=  312] P4.T1  R 0x5980  page 89 (outer 5, inner 9) off 0x80 | TLB HIT  | PA 0x0980
+[t=  313] P4.T1  R 0x59A0  page 89 (outer 5, inner 9) off 0xA0 | TLB HIT  | PA 0x09A0
+[t=  314] P4.T1  W 0x59C0  page 89 (outer 5, inner 9) off 0xC0 | TLB HIT  | PA 0x09C0
+[t=  315] P4.T1  R 0x59E0  page 89 (outer 5, inner 9) off 0xE0 | TLB HIT  | PA 0x09E0
+[t=  316] FINISH   P4.T1  turnaround=316 wait=236
+[t=  316] IDLE     all threads finished
+
+#################### RR ####################
+  CPU
+    cycles executed  : 316
+    context switches : 53  (between processes)
+    thread switches  : 21  (between threads of one process)
+    cycles per thread:  P1.T1=40  P1.T2=24  P2.T1=64  P2.T2=16  P3.T1=32  P3.T2=48  P4.T1=80  P4.T2=12
+  Memory accesses          : 316
+  Page faults              : 40  (12.66 %)
+  Disk write-backs         : 23
+  Effective access cost    : 21.19 cycles/access  (TLB 1, walk +2, fault +100, write-back +100)
+  TLB (8 entries, LRU)
+    lookups        : 316
+    hits / misses  : 276 / 40
+    hit rate       : 87.34 %
+    LRU evictions  : 32
+    invalidations  : 0  (entries removed when their page was evicted)
+    flushes        : 0
+  Two-level page table (4 outer bits + 4 inner bits, 256 pages per process)
+    page-table walks       : 40
+    page faults            : 40
+    pages loaded / evicted : 40 / 24
+    resident pages now     : 16
+    second-level tables    : 8  (128 inner entries allocated vs 1024 for flat tables)
+  Advanced Clock (16 frames)
+    loads into free frames : 16
+    evictions              : 24
+      clean (R=0,M=0)      : 1
+      dirty (write-back)   : 23
+    clock hand moves       : 458
+  Frame table (hand at 10)
+    frame  0 : P4 page  84  R=0 M=1
+    frame  1 : P2 page  37  R=1 M=1
+    frame  2 : P3 page 133  R=1 M=1
+    frame  3 : P4 page  85  R=1 M=1
+    frame  4 : P2 page  38  R=1 M=1
+    frame  5 : P4 page  86  R=1 M=1
+    frame  6 : P2 page  39  R=1 M=1
+    frame  7 : P4 page  87  R=1 M=1
+    frame  8 : P4 page  88  R=1 M=1
+    frame  9 : P4 page  89  R=1 M=1
+    frame 10 : P3 page  67  R=0 M=1   <- hand
+    frame 11 : P3 page 131  R=0 M=1
+    frame 12 : P4 page  83  R=0 M=1
+    frame 13 : P1 page  20  R=0 M=1
+    frame 14 : P2 page  36  R=0 M=1
+    frame 15 : P3 page 132  R=0 M=1
+  Per-thread results (RR)
+    Thread    Prio  Burst  Response  Wait  Turnaround  Dispatches  TLB hit%  Faults
+    --------  ----  -----  --------  ----  ----------  ----------  --------  ------
+    P1.T1        2     40         0   192         232          10      87.5       5
+    P1.T2        3     24         4   132         156           6      87.5       3
+    P2.T1        1     64         8   232         296          16      87.5       8
+    P2.T2        1     16        12    96         112           4      87.5       2
+    P3.T1        3     32        16   172         204           8      87.5       4
+    P3.T2        3     48        20   216         264          12      87.5       6
+    P4.T1        2     80        24   236         316          20      87.5      10
+    P4.T2        1     12        28    84          96           3      83.3       2
+
+  ASCII timeline - RR  (ticks 0-315 of 316)
+  Legend: '=' TLB hit   'm' TLB miss (page table hit)   'F' page fault   'W' page fault + dirty write-back
+          '.' ready/waiting   'C' context switch   't' thread switch
+
+  tick     0         10        20        30        40        50        60        70        80        90        
+           |---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+  P1.T1    F===............................====............................F===............................====
+  P1.T2    ....F===............................====............................F===............................
+  P2.T1    ........F===............................====............................F===........................
+  P2.T2    ............F===............................====............................F===....................
+  P3.T1    ................F===............................====............................F===................
+  P3.T2    ....................F===............................====............................F===............
+  P4.T1    ........................F===............................====............................F===........
+  P4.T2    ............................F===............................====............................F===    
+  Switch       t   C   t   C   t   C   t   C   t   C   t   C   t   C   t   C   t   C   t   C   t   C   t   C   
+
+  tick     100       110       120       130       140       150       160       170       180       190       
+           |---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+  P1.T1    ........................F===....................====....................W===................====....
+  P1.T2    ====........................W===....................====                                            
+  P2.T1    ....====........................W===....................====................W===................====
+  P2.T2    ........====                                                                                        
+  P3.T1    ............====....................W===....................====................W===................
+  P3.T2    ................====....................W===....................====................W===............
+  P4.T1    ....................====....................W===....................====................W===........
+  P4.T2                                                                                                        
+  Switch   t   C   t   C   t   C   C   t   C   C   t   C   C   t   C   C   t   C   C   C   C   t   C   C   C   
+
+  tick     200       210       220       230       240       250       260       270       280       290       
+           |---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+  P1.T1    ............W===............====                                                                    
+  P1.T2                                                                                                        
+  P2.T1    ................W===............====........W===........====........W===....====....W===....====    
+  P2.T2                                                                                                        
+  P3.T1    ====                                                                                                
+  P3.T2    ....====............W===............====........W===........====                                    
+  P4.T1    ........====............W===............====........W===........====....W===....====....W===....====
+  P4.T2                                                                                                        
+  Switch   C   t   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   
+
+  tick     300       310   
+           |---------|-----
+  P1.T1                    
+  P1.T2                    
+  P2.T1                    
+  P2.T2                    
+  P3.T1                    
+  P3.T2                    
+  P4.T1    W=======W=======
+  P4.T2                    
+  Switch                   
