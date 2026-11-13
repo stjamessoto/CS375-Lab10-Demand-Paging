@@ -7,5 +7,8 @@ vmsim: src/*.cpp src/*.h
 run: vmsim
 	./vmsim
 
+plots: run
+	python3 plotter.py
+
 clean:
 	rm -rf vmsim output

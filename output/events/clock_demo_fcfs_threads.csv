@@ -1,2 +1,0 @@
-policy,pid,tid,priority,burst,response,wait,turnaround,dispatches,tlb_hits,tlb_misses,faults,demotions,promotions
-FCFS,1,1,5,7,0,0,7,1,1,6,6,0,0

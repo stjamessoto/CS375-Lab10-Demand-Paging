@@ -7,6 +7,7 @@
 #     input/trace.txt   modified trace with varied access patterns
 #     output.log        auto-generated output log (all 4 policies + summary)
 #     report.pdf        written report (summary table, timeline graphs, analysis)
+#     plotter.py        automated timeline graphs (handout's optional plotter.py)
 #     Makefile          build + run
 #     README.txt        how to build and run
 #
@@ -26,6 +27,7 @@ cp src/*.cpp src/*.h            "$S/src/"
 cp input/trace.txt              "$S/input/"
 cp output/trace_output.log      "$S/output.log"
 cp report/report.pdf            "$S/report.pdf"
+cp scripts/plotter.py           "$S/plotter.py"
 
 cat > "$S/Makefile" <<'EOF'
 CXX      ?= g++
@@ -36,6 +38,9 @@ vmsim: src/*.cpp src/*.h
 
 run: vmsim
 	./vmsim
+
+plots: run
+	python3 plotter.py
 
 clean:
 	rm -rf vmsim output
@@ -49,11 +54,13 @@ Contents
   input/trace.txt  modified trace (original sample + sequential, random, localized patterns)
   output.log       auto-generated output log (FCFS, RR, Priority, MLFQ + summary table)
   report.pdf       report: summary table, timeline graphs, analysis
+  plotter.py       draws the timeline graphs from the simulator output
 
 Build and run (g++ with C++17):
   make             (or: g++ -std=c++17 -O2 -o vmsim src/*.cpp)
   ./vmsim          runs all four policies on input/trace.txt and
                    regenerates the log as output/trace_output.log
+  make plots       timeline graphs -> output/graphs/ (PNG with matplotlib, else ASCII)
   ./vmsim --help   options: --tlb N, --frames N, --policy fcfs|rr|priority|mlfq, ...
 EOF
 

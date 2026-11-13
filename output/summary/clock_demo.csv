@@ -1,2 +1,0 @@
-tag,policy,tlb_size,frames,page_size,accesses,tlb_hits,tlb_misses,tlb_hit_rate,page_faults,page_fault_rate,write_backs,context_switches,thread_switches,total_ticks,avg_wait,avg_turnaround,avg_response,max_wait,jain_fairness,eff_access_cost
-clock_demo,FCFS,8,3,256,7,1,6,14.29,6,85.71,1,0,0,7,0.00,7.00,0.00,0,1.000,102.71
